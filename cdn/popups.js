@@ -1,10 +1,10 @@
-/*! THE BOYS Tilda popups loader v26
+/*! THE BOYS Tilda popups loader v27
  * One-line T123 boot — see docs/tilda-embed.html
  * Triggers: #order #gift #visit #story-1
  */
 (function () {
   if (window.__tbPopups) return;
-  window.__tbPopups = { v: 26 };
+  window.__tbPopups = { v: 27 };
 
   var BASES = [
     'https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/',
@@ -44,6 +44,8 @@
   var patched = 0;
   var jumpUntil = 0;
   var jumpRaf = 0;
+  var anchorBanUntil = 0;
+  var userScroll = 0;
   var _scrollTo = window.scrollTo.bind(window);
   var _scroll = window.scroll.bind(window);
   var _scrollBy = window.scrollBy.bind(window);
@@ -95,6 +97,7 @@
     holdUntil = 0;
     restoring = 0;
     jumpUntil = 0;
+    anchorBanUntil = Date.now() + 2500;
     if (jumpRaf) { cancelAnimationFrame(jumpRaf); jumpRaf = 0; }
     if (patched) {
       patched = 0;
@@ -125,7 +128,7 @@
   function armScrollLock(ms) {
     var y = readY();
     if (!(y < 2 && lastY > 2)) freezeY(true);
-    jumpUntil = Date.now() + (ms || 1200);
+    jumpUntil = Date.now() + (ms || 2500);
     pinning = jumpUntil;
     holdUntil = Math.max(holdUntil, pinning);
     if (!patched) {
@@ -250,7 +253,7 @@
       lastOpen = key;
       lastOpenAt = now;
       pending = '';
-      armScrollLock(1200);
+      armScrollLock(2500);
       forceY();
       api.open(key);
       forceY();
@@ -267,8 +270,8 @@
     if (!key) return;
 
     if (!isLocked()) freezeY(true);
-    holdUntil = Date.now() + 1200;
-    armScrollLock(1200);
+    holdUntil = Date.now() + 2500;
+    armScrollLock(2500);
 
     if (e.cancelable && e.preventDefault) e.preventDefault();
     if (e.stopPropagation) e.stopPropagation();
@@ -291,9 +294,20 @@
 
   freezeY(true);
 
+  function markUserScroll() { userScroll = Date.now() + 700; }
+  window.addEventListener('wheel', markUserScroll, { passive: true, capture: true });
+  window.addEventListener('touchmove', markUserScroll, { passive: true, capture: true });
+  window.addEventListener('keydown', function (e) {
+    var k = e.key;
+    if (k === 'ArrowDown' || k === 'ArrowUp' || k === 'PageDown' || k === 'PageUp' || k === 'Home' || k === 'End' || k === ' ') markUserScroll();
+  }, true);
+
   window.addEventListener('scroll', function () {
-    if (Date.now() < jumpUntil || isLocked()) {
-      forceY();
+    var y = readY();
+    var saved = window.__tbKeepY != null ? window.__tbKeepY : lastY;
+    var guard = isLocked() || Date.now() < jumpUntil || Date.now() < anchorBanUntil;
+    if (guard && Date.now() > userScroll) {
+      if (Math.abs(y - saved) > 1) forceY();
       return;
     }
     freezeY(false);
@@ -311,7 +325,7 @@
     var key = normHash(location.hash);
     if (!POP[key]) return;
     clearPopHash();
-    armScrollLock(1200);
+    armScrollLock(2500);
     forceY();
     openKey(key);
   });
@@ -320,7 +334,7 @@
     var bootKey = normHash(location.hash);
     freezeY(true);
     clearPopHash();
-    armScrollLock(1200);
+    armScrollLock(2500);
     setTimeout(function () { openKey(bootKey); }, 0);
   }
 
@@ -370,7 +384,7 @@
     'visit.css', 'visit.js',
     'story.css', 'story.js'
   ];
-  var VER = 'v=26';
+  var VER = 'v=27';
 
   function loadCss(href) {
     var l = document.createElement('link');

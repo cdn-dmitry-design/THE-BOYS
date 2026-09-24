@@ -212,6 +212,9 @@ function lock(on){
     return;
   }
   if(!html.classList.contains('tb-story-lock'))return;
+  var back=window.__tbKeepY!=null?window.__tbKeepY:scrollY;
+  if(back<0)back=0;
+  try{document.documentElement.scrollTop=back;document.body.scrollTop=back;}catch(e){}
   html.classList.remove('tb-story-lock');
   document.body.style.top=bodyTop||'';
   if(rec&&recOverflow!=null){rec.style.overflow=recOverflow;recOverflow=null;}
