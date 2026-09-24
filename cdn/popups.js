@@ -1,10 +1,10 @@
-/*! THE BOYS Tilda popups loader v18
+/*! THE BOYS Tilda popups loader v19
  * One-line T123 boot — see docs/tilda-embed.html
  * Triggers: #order #gift #visit #story-1
  */
 (function () {
   if (window.__tbPopups) return;
-  window.__tbPopups = { v: 18 };
+  window.__tbPopups = { v: 19 };
 
   var BASES = [
     'https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/',
@@ -20,41 +20,6 @@
     }
     return BASES[0];
   })();
-
-  window.__tbPreBase = BASE;
-  if (!window.__tbPreBoot) {
-    window.__tbPreBoot = 1;
-    var preHtml = document.documentElement;
-    preHtml.classList.add('tb-pre-on');
-    var preCss = document.createElement('style');
-    preCss.id = 'tb-pre-cover';
-    preCss.textContent = 'html.tb-pre-on,html.tb-pre-on body{overflow:hidden!important}#tbPreloader{position:fixed;inset:0;z-index:2147483000;background:#04100c}';
-    (document.head || preHtml).appendChild(preCss);
-    if (!document.getElementById('tbPreloader')) {
-      var preEl = document.createElement('div');
-      preEl.id = 'tbPreloader';
-      preEl.setAttribute('aria-hidden', 'true');
-      preHtml.appendChild(preEl);
-    }
-    var preSrc = BASE + 'preloader.js?v=18';
-    var preSc = document.createElement('script');
-    preSc.src = preSrc;
-    preSc.async = false;
-    preSc.onerror = function () {
-      var i = 0;
-      var alts = BASES.filter(function (b) { return b !== BASE; });
-      function next() {
-        if (i >= alts.length) return;
-        var s2 = document.createElement('script');
-        s2.src = alts[i++] + 'preloader.js?v=18';
-        s2.async = false;
-        s2.onerror = next;
-        (document.head || preHtml).appendChild(s2);
-      }
-      next();
-    };
-    (document.head || preHtml).appendChild(preSc);
-  }
 
   var POP = {
     order: 'tbOrderPop',
@@ -355,7 +320,7 @@
     'visit.css', 'visit.js',
     'story.css', 'story.js'
   ];
-  var VER = 'v=18';
+  var VER = 'v=19';
 
   function loadCss(href) {
     var l = document.createElement('link');
