@@ -38,7 +38,7 @@ function open(){
   if(noMotion())root.classList.add('is-on');
   else{root.classList.remove('is-on');void root.offsetWidth;requestAnimationFrame(function(){root.classList.add('is-on');});}
 }
-function close(){if(!root||root.hidden)return;root.classList.remove('is-on');root.classList.add('is-out');clearTimeout(hideT);if(noMotion())finish();else hideT=setTimeout(finish,420);}
+function close(){if(!root||root.hidden)return;root.classList.remove('is-on');root.classList.add('is-out');clearTimeout(hideT);if(noMotion())finish();else hideT=setTimeout(finish,720);}
 function onStage(e){
   if(e.target===stage||e.target.closest('[data-close]')){close();return;}
   var q=e.target.closest('.tb-pop__q');if(!q)return;var i=+q.getAttribute('data-i');setOpen(i===openI?-1:i);
