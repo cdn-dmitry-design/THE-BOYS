@@ -1,10 +1,10 @@
-/*! THE BOYS Tilda popups loader v25
+/*! THE BOYS Tilda popups loader v26
  * One-line T123 boot — see docs/tilda-embed.html
  * Triggers: #order #gift #visit #story-1
  */
 (function () {
   if (window.__tbPopups) return;
-  window.__tbPopups = { v: 25 };
+  window.__tbPopups = { v: 26 };
 
   var BASES = [
     'https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/',
@@ -42,6 +42,8 @@
   var pinning = 0;
   var restoring = 0;
   var patched = 0;
+  var jumpUntil = 0;
+  var jumpRaf = 0;
   var _scrollTo = window.scrollTo.bind(window);
   var _scroll = window.scroll.bind(window);
   var _scrollBy = window.scrollBy.bind(window);
@@ -69,11 +71,11 @@
   }
 
   function freezeY(force) {
-    if (!force && (restoring || Date.now() < holdUntil || Date.now() < pinning || isLocked())) return;
     var y = readY();
     if (y < 0) y = 0;
-    // Не затираем сохранённую позицию нулём, пока открыт/закрывается попап
-    if (!force && y < 2 && lastY > 2) return;
+    // Прыжок наверх не должен затирать место, где человек был
+    if (y < 2 && lastY > 2) return;
+    if (!force && (restoring || Date.now() < holdUntil || Date.now() < pinning || Date.now() < jumpUntil || isLocked())) return;
     lastY = y;
     window.__tbKeepY = lastY;
   }
@@ -92,6 +94,8 @@
     pinning = 0;
     holdUntil = 0;
     restoring = 0;
+    jumpUntil = 0;
+    if (jumpRaf) { cancelAnimationFrame(jumpRaf); jumpRaf = 0; }
     if (patched) {
       patched = 0;
       window.scrollTo = _scrollTo;
@@ -111,15 +115,27 @@
   window.__tbRestoreY = restoreY;
   window.__tbReleaseScroll = disarmNow;
 
+  function jumpLoop() {
+    jumpRaf = 0;
+    if (Date.now() >= jumpUntil) return;
+    forceY();
+    jumpRaf = requestAnimationFrame(jumpLoop);
+  }
+
   function armScrollLock(ms) {
-    pinning = Date.now() + (ms || 2000);
+    var y = readY();
+    if (!(y < 2 && lastY > 2)) freezeY(true);
+    jumpUntil = Date.now() + (ms || 1200);
+    pinning = jumpUntil;
     holdUntil = Math.max(holdUntil, pinning);
-    if (patched) return;
-    patched = 1;
-    window.scrollTo = function () { forceY(); };
-    window.scroll = function () { forceY(); };
-    window.scrollBy = function () { forceY(); };
-    Element.prototype.scrollIntoView = function () { forceY(); };
+    if (!patched) {
+      patched = 1;
+      window.scrollTo = function () { if (Date.now() < jumpUntil || isLocked()) forceY(); else _scrollTo.apply(window, arguments); };
+      window.scroll = function () { if (Date.now() < jumpUntil || isLocked()) forceY(); else _scroll.apply(window, arguments); };
+      window.scrollBy = function () { if (Date.now() < jumpUntil || isLocked()) forceY(); else _scrollBy.apply(window, arguments); };
+      Element.prototype.scrollIntoView = function () { if (Date.now() < jumpUntil || isLocked()) forceY(); else _scrollIntoView.apply(this, arguments); };
+    }
+    if (!jumpRaf) jumpRaf = requestAnimationFrame(jumpLoop);
   }
 
   function maybeDisarm() {
@@ -134,13 +150,7 @@
   }
 
   setInterval(function () {
-    if (isLocked()) {
-      pinning = Date.now() + 600;
-      holdUntil = Math.max(holdUntil, pinning);
-      if (!patched) armScrollLock(600);
-    } else {
-      maybeDisarm();
-    }
+    if (!isLocked() && Date.now() >= jumpUntil) maybeDisarm();
   }, 200);
 
   function clearPopHash() {
@@ -240,7 +250,7 @@
       lastOpen = key;
       lastOpenAt = now;
       pending = '';
-      armScrollLock(160);
+      armScrollLock(1200);
       forceY();
       api.open(key);
       forceY();
@@ -257,8 +267,8 @@
     if (!key) return;
 
     if (!isLocked()) freezeY(true);
-    holdUntil = Date.now() + 200;
-    armScrollLock(160);
+    holdUntil = Date.now() + 1200;
+    armScrollLock(1200);
 
     if (e.cancelable && e.preventDefault) e.preventDefault();
     if (e.stopPropagation) e.stopPropagation();
@@ -282,8 +292,8 @@
   freezeY(true);
 
   window.addEventListener('scroll', function () {
-    if (restoring || Date.now() < pinning || isLocked()) {
-      if (restoring || Date.now() < pinning || isLocked()) forceY();
+    if (Date.now() < jumpUntil || isLocked()) {
+      forceY();
       return;
     }
     freezeY(false);
@@ -301,7 +311,7 @@
     var key = normHash(location.hash);
     if (!POP[key]) return;
     clearPopHash();
-    armScrollLock(160);
+    armScrollLock(1200);
     forceY();
     openKey(key);
   });
@@ -310,7 +320,7 @@
     var bootKey = normHash(location.hash);
     freezeY(true);
     clearPopHash();
-    armScrollLock(160);
+    armScrollLock(1200);
     setTimeout(function () { openKey(bootKey); }, 0);
   }
 
@@ -360,7 +370,7 @@
     'visit.css', 'visit.js',
     'story.css', 'story.js'
   ];
-  var VER = 'v=25';
+  var VER = 'v=26';
 
   function loadCss(href) {
     var l = document.createElement('link');
