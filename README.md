@@ -22,22 +22,7 @@
 
 ## Что оставить на Тильде
 
-1. Блоки формы BF204N заявки и карты — с полями имя, почта, телефон / номинал и чекбоксами. Попапы привязаны к этим стандартным формам и отправляют именно их. Прятать блоки нужно своим CSS, чтобы форма осталась в DOM. Скрытие в настройках Тильды ставит `display: none`, и заявка не уходит.
-
-```css
-#rec4168108201,
-#rec4169596401 {
-  position: absolute !important;
-  left: 0 !important;
-  top: 0 !important;
-  width: 1px !important;
-  height: 1px !important;
-  margin: 0 !important;
-  overflow: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-```
+1. Стандартные формы BF204N. Попапы привязаны к ним и отправляют именно их. Прятать через CSS: если скрыть блок в Тильде, форма не уйдёт.
 2. Кнопки с хэшами из таблицы.
 3. Блок T123 со строкой из `docs/tilda-embed.html`.
 
