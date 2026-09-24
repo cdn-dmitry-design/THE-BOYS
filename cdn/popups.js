@@ -51,7 +51,6 @@
   var patched = 0;
   var loading = {};
   var cssDone = {};
-  var warmed = 0;
 
   var _scrollTo = window.scrollTo.bind(window);
   var _scroll = window.scroll.bind(window);
@@ -374,19 +373,8 @@
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootScan);
   else bootScan();
-  window.addEventListener('load', function () {
-    bootScan();
-    /* прогрев попапов после load — не блокирует первый экран */
-    var warm = function () {
-      if (warmed) return;
-      warmed = 1;
-      Object.keys(BUNDLE).forEach(function (api) {
-        ensureApi(api).catch(function () {});
-      });
-    };
-    if (typeof requestIdleCallback === 'function') requestIdleCallback(warm, { timeout: 5000 });
-    else setTimeout(warm, 2500);
-  });
+  /* Без автопрогрева: иначе Safari держит синюю полоску, пока тянет 8 файлов попапов */
+  window.addEventListener('load', function () { bootScan(); });
 
   if (POP[normHash(location.hash)]) {
     var bootKey = normHash(location.hash);
