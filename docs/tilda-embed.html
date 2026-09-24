@@ -1,10 +1,10 @@
 <!--
-  THE BOYS — вставьте ВЕСЬ этот блок в T123 (HTML-код).
-  Важно: не одну строку <script src=...>, а именно этот inline-загрузчик —
-  Тильда часто не запускает внешний src из HTML-блока.
+  THE BOYS — вставьте ВЕСЬ блок в T123.
 
-  Zero Block → CSS-класс БЕЗ точки: order / visit / gift / story-1
-  Несколько: order, arrow-bottom, arrow-an
+  Ссылки-триггеры (хэш, страница НЕ прыгает вверх):
+    #order   #gift   #visit   #story-1
+  В Zero Block / кнопке: ссылка → https://ваш-сайт/#order
+  или относительная #order
 -->
 <script>
 (function () {
@@ -17,9 +17,9 @@
     (document.head || document.documentElement).appendChild(s);
     return s;
   }
-  var primary = add('https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/popups.js?v=11');
+  var primary = add('https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/popups.js?v=12');
   primary.onerror = function () {
-    add('https://raw.githack.com/cdn-dmitry-design/THE-BOYS/main/cdn/popups.js?v=11');
+    add('https://raw.githack.com/cdn-dmitry-design/THE-BOYS/main/cdn/popups.js?v=12');
   };
 })();
 </script>
