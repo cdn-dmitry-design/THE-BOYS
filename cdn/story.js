@@ -253,7 +253,7 @@ function close(){
   clearTimeout(hideT);
   if(rafId){cancelAnimationFrame(rafId);rafId=0;}
   if(noMotion())finish();
-  else hideT=setTimeout(finish,460);
+  else hideT=setTimeout(finish,720);
 }
 function onStage(e){
   if(e.target.closest('[data-close]')){close();return;}
