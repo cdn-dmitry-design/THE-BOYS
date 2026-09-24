@@ -1,4 +1,4 @@
-﻿(function(){
+(function(){
 var FAQ=[
   {q:'Нужно ли записываться заранее?',a:'Шоурум THE BOYS работает по\u00a0записи, потому что наши гости ценят комфорт и\u00a0камерную атмосферу. Работа по\u00a0записи позволяет каждому нашему гостю выбирать и\u00a0примерять вещи в\u00a0спокойной обстановке без присутствия посторонних.'},
   {q:'Что происходит на примерке?',a:'Сначала коротко говорим, зачем вы пришли. Дальше спокойно примеряете вещи без очереди и\u00a0посторонних: смотрим посадку, сочетания и\u00a0то, как вещь сидит именно на вас.'},
@@ -47,7 +47,7 @@ function onDoc(e){var t=e.target.closest('[data-tb-pop=visit],a[href="#visit"],a
 function ensure(){
   if(built)return;built=1;
   root=document.getElementById('tbVisitPop');
-  if(!root){root=document.createElement('div');root.id='tbVisitPop';root.className='tb-pop uc-no-scale';root.hidden=1;stage=document.createElement('div');stage.className='tb-pop__stage';root.appendChild(stage);document.body.appendChild(root);}
+  if(!root){root=document.createElement('div');root.id='tbVisitPop';root.className='tb-pop uc-no-scale';root.hidden=1;stage=document.createElement('div');stage.className='tb-pop__stage';root.appendChild(stage);document.documentElement.appendChild(root);}
   else{stage=root.querySelector('.tb-pop__stage');root.classList.add('uc-no-scale');}
   render();stage.addEventListener('click',onStage);
   addEventListener('resize',function(){clearTimeout(rsT);rsT=setTimeout(function(){if(root&&!root.hidden)scale();},150);});
