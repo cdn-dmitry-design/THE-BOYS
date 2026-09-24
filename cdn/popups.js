@@ -42,7 +42,7 @@
     tbStoryPop: ['story.css', 'story.js']
   };
 
-  var VER = 'v=28';
+  var VER = 'v=29';
   var pending = '';
   var lastY = 0;
   var lastOpen = '';
