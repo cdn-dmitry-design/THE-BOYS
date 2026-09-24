@@ -116,8 +116,9 @@ function lock(on){
   var html=document.documentElement,rec=document.getElementById('allrecords');
   if(on){
     if(html.classList.contains('tb-story-lock'))return;
-    scrollY=pageYOffset||html.scrollTop||0;
+    scrollY=(window.__tbKeepY!=null?window.__tbKeepY:(pageYOffset||html.scrollTop||0));
     if(scrollY<0)scrollY=0;
+    window.__tbKeepY=scrollY;
     bodyTop=document.body.style.top;
     document.body.style.top=-scrollY+'px';
     if(rec){recOverflow=rec.style.overflow;rec.style.overflow='hidden';}
