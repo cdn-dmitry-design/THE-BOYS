@@ -7,12 +7,28 @@
 **Да.** На Тильду в HTML-блок вставляется одна строка, которая тянет скрипты с CDN (jsDelivr поверх GitHub):
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/popups.js?v=8"></script>
+<script>
+(function () {
+  if (window.__tbPopBoot) return;
+  window.__tbPopBoot = 1;
+  function add(src) {
+    var s = document.createElement('script');
+    s.src = src;
+    s.async = false;
+    (document.head || document.documentElement).appendChild(s);
+    return s;
+  }
+  var primary = add('https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/popups.js?v=11');
+  primary.onerror = function () {
+    add('https://raw.githack.com/cdn-dmitry-design/THE-BOYS/main/cdn/popups.js?v=11');
+  };
+})();
+</script>
 ```
 
-Триггеры — CSS-класс на кнопке/тексте **без точки**: `story-1`, `visit`, `order`, `gift`.
+В Zero Block класс **без точки**: `order` (несколько через запятую ок).
 
-Актуальная строка также в `docs/tilda-embed.html`.
+Актуальный код также в `docs/tilda-embed.html`. **Не** используйте голый `<script src="...">` — Тильда его часто не выполняет.
 
 Полные HTML-файлы для вставки целиком в Тильду лежат в корне проекта и в `tilda-backup/` — на случай, если CDN не нужен.
 
@@ -50,7 +66,7 @@ docs/tilda-embed.html
 ## Что оставить на странице Тильды
 
 1. Скрытые/обычные блоки форм с нужными полями (имя, почта, телефон / номинал, чекбоксы).
-2. Кнопки/ссылки с CSS-классом `story-1` / `visit` / `order` / `gift` (или `data-tb-pop="…"`).
-3. Одну строку `<script src=".../popups.js?v=8">` — **с `?v=`**, иначе кэш не обновится.
+2. Кнопки/ссылки с CSS-классом `story-1` / `visit` / `order` / `gift`.
+3. Блок T123 с **inline-загрузчиком** из `docs/tilda-embed.html` (не голый `<script src>`).
 
 Публиковать страницу после смены скрипта обязательно.

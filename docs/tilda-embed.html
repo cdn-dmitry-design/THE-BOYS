@@ -1,17 +1,25 @@
 <!--
-  THE BOYS — одна строка для HTML-блока Тильды (T123).
-  ВАЖНО: в URL должен быть ?v=10 (или новее), иначе Тильда/браузер держат старый скрипт.
-  Один только CSS с cursor попапы НЕ откроет — нужен этот script.
+  THE BOYS — вставьте ВЕСЬ этот блок в T123 (HTML-код).
+  Важно: не одну строку <script src=...>, а именно этот inline-загрузчик —
+  Тильда часто не запускает внешний src из HTML-блока.
 
-  Триггеры — в Zero Block поле «CSS-класс» БЕЗ точки.
-  Несколько классов через запятую — ок:
-    order, arrow-bottom, arrow-an
-    story-1, visit, gift
-
-  Свой CSS для ховера (если без popups.js):
-    .order, .order .tn-atom { cursor: pointer !important; }
-
-  Формы: нативные блоки Тильды
-  (rec 4168108201 заявка, rec 4169596401 подарочная карта).
+  Zero Block → CSS-класс БЕЗ точки: order / visit / gift / story-1
+  Несколько: order, arrow-bottom, arrow-an
 -->
-<script src="https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/popups.js?v=10"></script>
+<script>
+(function () {
+  if (window.__tbPopBoot) return;
+  window.__tbPopBoot = 1;
+  function add(src) {
+    var s = document.createElement('script');
+    s.src = src;
+    s.async = false;
+    (document.head || document.documentElement).appendChild(s);
+    return s;
+  }
+  var primary = add('https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/popups.js?v=11');
+  primary.onerror = function () {
+    add('https://raw.githack.com/cdn-dmitry-design/THE-BOYS/main/cdn/popups.js?v=11');
+  };
+})();
+</script>
