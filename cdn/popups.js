@@ -1,11 +1,10 @@
 /*! THE BOYS Tilda popups loader
  * One line for Tilda HTML block (обязательно с ?v= — иначе кэш Тильды/браузера):
- * <script src="https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/popups.js?v=9"></script>
+ * <script src="https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/popups.js?v=10"></script>
  *
- * Triggers (классы БЕЗ точки, через ПРОБЕЛ, не через запятую):
- *   story-1 story-2 story-3 visit order gift
- *   верно:  order arrow-bottom
- *   неверно: order, arrow-bottom   ← запятая ломает класс
+ * Triggers — CSS-класс в Zero Block БЕЗ точки (несколько через запятую или пробел):
+ *   order, arrow-bottom, arrow-an
+ *   story-1, visit, gift
  * Also: data-tb-pop="…" / legacy #hash links.
  *
  * Forms still go through native Tilda form blocks on the page
@@ -46,7 +45,10 @@
     if (document.getElementById('tb-pop-cursor')) return;
     var st = document.createElement('style');
     st.id = 'tb-pop-cursor';
-    var kids = TRIG.map(function (n) { return '.' + n + ',.' + n + ' *'; }).join(',');
+    // Zero Block: класс на .tn-elem, клик/ховер на вложенном .tn-atom
+    var kids = TRIG.map(function (n) {
+      return '.' + n + ',.' + n + ' .tn-atom,.' + n + ' *';
+    }).join(',');
     st.textContent = kids + '{cursor:pointer!important;pointer-events:auto!important}';
     (document.head || document.documentElement).appendChild(st);
   })();
@@ -198,7 +200,7 @@
 
   var chain = Promise.resolve();
   FILES.forEach(function (name) {
-    var url = BASE + name + '?v=9';
+    var url = BASE + name + '?v=10';
     if (/\.css$/i.test(name)) loadCss(url);
     else chain = chain.then(function () { return loadJs(url); });
   });
