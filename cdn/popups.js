@@ -1,10 +1,10 @@
-/*! THE BOYS Tilda popups loader v17
+/*! THE BOYS Tilda popups loader v18
  * One-line T123 boot — see docs/tilda-embed.html
  * Triggers: #order #gift #visit #story-1
  */
 (function () {
   if (window.__tbPopups) return;
-  window.__tbPopups = { v: 17 };
+  window.__tbPopups = { v: 18 };
 
   var BASES = [
     'https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/',
@@ -36,7 +36,7 @@
       preEl.setAttribute('aria-hidden', 'true');
       preHtml.appendChild(preEl);
     }
-    var preSrc = BASE + 'preloader.js?v=17';
+    var preSrc = BASE + 'preloader.js?v=18';
     var preSc = document.createElement('script');
     preSc.src = preSrc;
     preSc.async = false;
@@ -46,7 +46,7 @@
       function next() {
         if (i >= alts.length) return;
         var s2 = document.createElement('script');
-        s2.src = alts[i++] + 'preloader.js?v=17';
+        s2.src = alts[i++] + 'preloader.js?v=18';
         s2.async = false;
         s2.onerror = next;
         (document.head || preHtml).appendChild(s2);
@@ -355,7 +355,7 @@
     'visit.css', 'visit.js',
     'story.css', 'story.js'
   ];
-  var VER = 'v=17';
+  var VER = 'v=18';
 
   function loadCss(href) {
     var l = document.createElement('link');

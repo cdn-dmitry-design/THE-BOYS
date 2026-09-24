@@ -20,7 +20,7 @@
 
   var css = document.createElement('link');
   css.rel = 'stylesheet';
-  css.href = BASE + 'preloader.css?v=17';
+  css.href = BASE + 'preloader.css?v=18';
   (document.head || html).appendChild(css);
 
   var root = document.getElementById('tbPreloader');
