@@ -7,23 +7,7 @@
 **Да.** На Тильду в HTML-блок вставляется одна строка, которая тянет скрипты с CDN (jsDelivr поверх GitHub):
 
 ```html
-<script>
-(function () {
-  if (window.__tbPopBoot) return;
-  window.__tbPopBoot = 1;
-  function add(src) {
-    var s = document.createElement('script');
-    s.src = src;
-    s.async = false;
-    (document.head || document.documentElement).appendChild(s);
-    return s;
-  }
-  var primary = add('https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/popups.js?v=12');
-  primary.onerror = function () {
-    add('https://raw.githack.com/cdn-dmitry-design/THE-BOYS/main/cdn/popups.js?v=12');
-  };
-})();
-</script>
+<script>(function(){if(window.__tbPopBoot)return;window.__tbPopBoot=1;function a(u){var s=document.createElement('script');s.src=u;s.async=false;(document.head||document.documentElement).appendChild(s);return s}var p=a('https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/popups.js?v=12');p.onerror=function(){a('https://raw.githack.com/cdn-dmitry-design/THE-BOYS/main/cdn/popups.js?v=12')}})();</script>
 ```
 
 Триггеры — ссылки с хэшем (страница не уезжает вверх):
