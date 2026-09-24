@@ -135,7 +135,7 @@
 
   var chain = Promise.resolve();
   FILES.forEach(function (name) {
-    var url = BASE + name + '?v=3';
+    var url = BASE + name + '?v=4';
     if (/\.css$/i.test(name)) loadCss(url);
     else chain = chain.then(function () { return loadJs(url); });
   });
