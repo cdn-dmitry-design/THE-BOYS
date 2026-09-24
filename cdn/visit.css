@@ -1,8 +1,6 @@
 #tbVisitDemo{min-height:100vh;display:flex;align-items:center;justify-content:center;margin:0;background:#f7f4ef;font-family:Arsenal,Arial,sans-serif}
 #tbVisitDemo button{margin:0;padding:14px 22px;border:0;border-radius:999px;background:#04100c;color:#fdf7ee;font:inherit;font-size:16px;letter-spacing:-.28px;cursor:pointer}
 #tbVisitDemo[hidden]{display:none!important}
-[id^=rec]:has(#tbVisitMount){padding:0!important;margin:0!important;min-height:0!important;height:0!important;overflow:hidden!important;border:0!important;background:none!important}
-[id^=rec]:has(#tbVisitMount) .t-container,[id^=rec]:has(#tbVisitMount) .t123,[id^=rec]:has(#tbVisitMount) .t123__content,[id^=rec]:has(#tbVisitMount) .t-col,[id^=rec]:has(#tbVisitMount) .t-width{max-width:none!important;width:100%!important;padding:0!important;margin:0!important;min-height:0!important;height:0!important;overflow:hidden!important}
 .tb-pop{position:fixed;inset:0;z-index:100000;background:transparent;overflow:hidden;transition:opacity .7s cubic-bezier(.22,1,.36,1)}.tb-pop::before{content:"";position:absolute;inset:0;z-index:0;background:rgba(4,16,12,0);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);pointer-events:none;transition:background-color .6s cubic-bezier(.22,1,.36,1)}.tb-pop.is-on::before{background:rgba(4,16,12,.6)}
 .tb-pop.is-on{opacity:1}
 .tb-pop[hidden]{display:none!important}

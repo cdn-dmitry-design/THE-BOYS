@@ -1,10 +1,10 @@
-/*! THE BOYS Tilda popups loader v23
+/*! THE BOYS Tilda popups loader v24
  * One-line T123 boot — see docs/tilda-embed.html
  * Triggers: #order #gift #visit #story-1
  */
 (function () {
   if (window.__tbPopups) return;
-  window.__tbPopups = { v: 23 };
+  window.__tbPopups = { v: 24 };
 
   var BASES = [
     'https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/',
@@ -243,7 +243,7 @@
   (function () {
     var st = document.createElement('style');
     st.id = 'tb-pop-noscroll';
-    st.textContent = 'html{scroll-behavior:auto!important}';
+    st.textContent = 'html{scroll-behavior:auto!important}.tb-mount-hide{padding:0!important;margin:0!important;min-height:0!important;height:0!important;overflow:hidden!important;border:0!important;background:none!important}.tb-mount-hide .t-container,.tb-mount-hide .t123,.tb-mount-hide .t123__content,.tb-mount-hide .t-col,.tb-mount-hide .t-width{max-width:none!important;width:100%!important;padding:0!important;margin:0!important;min-height:0!important;height:0!important;overflow:hidden!important}';
     (document.head || document.documentElement).appendChild(st);
   })();
 
@@ -290,26 +290,34 @@
     wasLocked = now;
   }, 100);
 
+  function hideMounts() {
+    ['tbOrderMount', 'tbGiftMount', 'tbVisitMount', 'tbStoryMount'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el || !el.closest) return;
+      var rec = el.closest('[id^="rec"]');
+      if (rec) rec.classList.add('tb-mount-hide');
+    });
+  }
+
   function bootScan() {
     neutralizeLinks(document);
-    [400, 1000, 2000, 4000].forEach(function (t) {
-      setTimeout(function () { neutralizeLinks(document); }, t);
-    });
+    hideMounts();
     if (typeof MutationObserver !== 'undefined') {
       try {
+        var timer = 0;
         var mo = new MutationObserver(function (muts) {
+          var added = 0;
           for (var i = 0; i < muts.length; i++) {
-            var m = muts[i];
-            if (m.type === 'childList') {
-              for (var j = 0; j < m.addedNodes.length; j++) {
-                var n = m.addedNodes[j];
-                if (n && n.nodeType === 1) neutralizeLinks(n);
-              }
-            }
-            if (m.type === 'attributes' && m.target) neutralizeLinks(m.target.parentNode || document);
+            if (muts[i].type === 'childList' && muts[i].addedNodes && muts[i].addedNodes.length) { added = 1; break; }
           }
+          if (!added || timer) return;
+          timer = setTimeout(function () {
+            timer = 0;
+            neutralizeLinks(document);
+            hideMounts();
+          }, 400);
         });
-        mo.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['href', 'data-href'] });
+        mo.observe(document.documentElement, { childList: true, subtree: true });
       } catch (e) {}
     }
   }
@@ -320,7 +328,7 @@
     'visit.css', 'visit.js',
     'story.css', 'story.js'
   ];
-  var VER = 'v=23';
+  var VER = 'v=24';
 
   function loadCss(href) {
     var l = document.createElement('link');
@@ -350,23 +358,28 @@
     return next();
   }
 
-  FILES.forEach(function (name) {
-    if (/\.css$/i.test(name)) loadCss(BASE + name + '?' + VER);
-  });
-
-  var chain = Promise.resolve();
-  FILES.forEach(function (name) {
-    if (/\.js$/i.test(name)) chain = chain.then(function () { return loadJs(name); });
-  });
-
-  function flush() { if (pending) openKey(pending); }
-  chain.then(function () {
-    flush();
-    window.__tbPopups.ready = 1;
-  }, function (err) {
-    flush();
-    if (typeof console !== 'undefined' && console.error) console.error('[THE BOYS popups]', err);
-  });
+  var chainStarted = 0;
+  function startFiles() {
+    if (chainStarted) return;
+    chainStarted = 1;
+    FILES.forEach(function (name) {
+      if (/\.css$/i.test(name)) loadCss(BASE + name + '?' + VER);
+    });
+    var chain = Promise.resolve();
+    FILES.forEach(function (name) {
+      if (/\.js$/i.test(name)) chain = chain.then(function () { return loadJs(name); });
+    });
+    function flush() { if (pending) openKey(pending); }
+    chain.then(function () {
+      flush();
+      window.__tbPopups.ready = 1;
+    }, function (err) {
+      flush();
+      if (typeof console !== 'undefined' && console.error) console.error('[THE BOYS popups]', err);
+    });
+  }
+  if (document.readyState === 'complete') startFiles();
+  else window.addEventListener('load', startFiles);
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootScan);
   else bootScan();

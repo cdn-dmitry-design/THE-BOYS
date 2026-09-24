@@ -1,8 +1,6 @@
 #tbStoryDemo{min-height:100vh;display:flex;align-items:center;justify-content:center;margin:0;background:#f7f4ef;font-family:Arsenal,Arial,sans-serif}
 #tbStoryDemo a{margin:0;padding:14px 22px;border:0;border-radius:999px;background:#04100c;color:#fdf7ee;font:inherit;font-size:16px;letter-spacing:-.28px;text-decoration:none}
 #tbStoryDemo[hidden]{display:none!important}
-[id^=rec]:has(#tbStoryMount){padding:0!important;margin:0!important;min-height:0!important;height:0!important;overflow:hidden!important;border:0!important;background:none!important}
-[id^=rec]:has(#tbStoryMount) .t-container,[id^=rec]:has(#tbStoryMount) .t123,[id^=rec]:has(#tbStoryMount) .t123__content,[id^=rec]:has(#tbStoryMount) .t-col,[id^=rec]:has(#tbStoryMount) .t-width{max-width:none!important;width:100%!important;padding:0!important;margin:0!important;min-height:0!important;height:0!important;overflow:hidden!important}
 html.tb-story-lock,html.tb-story-lock body{overflow:hidden!important;overscroll-behavior:none!important}
 html.tb-story-lock body{position:fixed!important;left:0!important;right:0!important;width:100%!important}
 .tb-story{position:fixed;inset:0;z-index:100000;background:transparent;overflow:hidden;overscroll-behavior:none;pointer-events:none;transition:opacity .7s cubic-bezier(.22,1,.36,1)}
