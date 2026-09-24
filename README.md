@@ -7,8 +7,10 @@
 **Да.** На Тильду в HTML-блок вставляется одна строка, которая тянет скрипты с CDN (jsDelivr поверх GitHub):
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/popups.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/popups.js?v=8"></script>
 ```
+
+Триггеры — CSS-класс на кнопке/тексте **без точки**: `story-1`, `visit`, `order`, `gift`.
 
 Актуальная строка также в `docs/tilda-embed.html`.
 
@@ -48,7 +50,7 @@ docs/tilda-embed.html
 ## Что оставить на странице Тильды
 
 1. Скрытые/обычные блоки форм с нужными полями (имя, почта, телефон / номинал, чекбоксы).
-2. Кнопки/ссылки с `data-tb-pop="order|gift|visit"`.
-3. Одну строку `<script src=".../popups.js">`.
+2. Кнопки/ссылки с CSS-классом `story-1` / `visit` / `order` / `gift` (или `data-tb-pop="…"`).
+3. Одну строку `<script src=".../popups.js?v=8">` — **с `?v=`**, иначе кэш не обновится.
 
 Публиковать страницу после смены скрипта обязательно.

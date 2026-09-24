@@ -1,9 +1,9 @@
 /*! THE BOYS Tilda popups loader
- * One line for Tilda HTML block:
- * <script src="https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/popups.js"></script>
+ * One line for Tilda HTML block (обязательно с ?v= — иначе кэш Тильды/браузера):
+ * <script src="https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/popups.js?v=8"></script>
  *
- * Triggers (prefer classes — no page jump):
- *   .story-1  .story-2  .story-3  .visit  .order  .gift
+ * Triggers (классы БЕЗ точки в поле Тильды):
+ *   story-1  story-2  story-3  visit  order  gift
  * Also: data-tb-pop="…" / legacy #hash links.
  *
  * Forms still go through native Tilda form blocks on the page
@@ -12,7 +12,10 @@
 (function () {
   var BASE = (function () {
     var s = document.currentScript;
-    if (s && s.src) return s.src.replace(/\/[^\/]*$/, '/');
+    if (s && s.src) {
+      var raw = String(s.src).split('?')[0];
+      return raw.replace(/\/[^\/]*$/, '/');
+    }
     return 'https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/';
   })();
 
@@ -29,7 +32,8 @@
     'story-3': 'tbStoryPop',
     story: 'tbStoryPop'
   };
-  var CLASS_SEL = '.story-1, .story-2, .story-3, .visit, .order, .gift';
+  var TRIG = ['story-1', 'story-2', 'story-3', 'visit', 'order', 'gift'];
+  var CLASS_SEL = '.' + TRIG.join(', .');
   var pending = '';
   var lastY = window.pageYOffset || document.documentElement.scrollTop || 0;
   var holdUntil = 0;
@@ -40,22 +44,37 @@
     if (document.getElementById('tb-pop-cursor')) return;
     var st = document.createElement('style');
     st.id = 'tb-pop-cursor';
-    st.textContent = CLASS_SEL + '{cursor:pointer}';
+    var kids = TRIG.map(function (n) { return '.' + n + ',.' + n + ' *'; }).join(',');
+    st.textContent = kids + '{cursor:pointer!important;pointer-events:auto!important}';
     (document.head || document.documentElement).appendChild(st);
   })();
+
+  function classTokens(el) {
+    if (!el) return [];
+    var raw = '';
+    if (typeof el.className === 'string') raw = el.className;
+    else if (el.getAttribute) raw = el.getAttribute('class') || '';
+    return String(raw).replace(/^\./, '').split(/\s+/).map(function (t) {
+      return String(t || '').replace(/^\./, '').toLowerCase();
+    }).filter(Boolean);
+  }
 
   function classKey(node) {
     if (!node) return '';
     if (node.nodeType === 3) node = node.parentElement;
     if (!node || !node.closest) return '';
-    var el = node.closest(CLASS_SEL);
-    if (!el || !el.classList) return '';
-    if (el.classList.contains('story-1')) return 'story-1';
-    if (el.classList.contains('story-2')) return 'story-2';
-    if (el.classList.contains('story-3')) return 'story-3';
-    if (el.classList.contains('visit')) return 'visit';
-    if (el.classList.contains('order')) return 'order';
-    if (el.classList.contains('gift')) return 'gift';
+    var el = node;
+    for (var depth = 0; el && depth < 12; depth++, el = el.parentElement) {
+      var tokens = classTokens(el);
+      for (var i = 0; i < TRIG.length; i++) {
+        if (tokens.indexOf(TRIG[i]) >= 0) return TRIG[i];
+      }
+    }
+    var hit = node.closest(CLASS_SEL);
+    if (!hit || !hit.classList) return '';
+    for (var j = 0; j < TRIG.length; j++) {
+      if (hit.classList.contains(TRIG[j])) return TRIG[j];
+    }
     return '';
   }
 
@@ -132,7 +151,7 @@
     e.preventDefault();
     e.stopPropagation();
     if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-    if (e.type === 'click') openKey(key);
+    if (e.type === 'click' || e.type === 'pointerup') openKey(key);
     clearHash();
     setTimeout(stay, 0);
     requestAnimationFrame(stay);
@@ -140,6 +159,7 @@
 
   window.addEventListener('scroll', remember, { passive: true });
   window.addEventListener('click', hold, true);
+  window.addEventListener('pointerup', hold, true);
   window.addEventListener('hashchange', function () {
     var key = String(location.hash || '').replace(/^#/, '').split(/[?&/]/)[0].toLowerCase();
     if (!POP[key]) return;
@@ -175,7 +195,7 @@
 
   var chain = Promise.resolve();
   FILES.forEach(function (name) {
-    var url = BASE + name + '?v=7';
+    var url = BASE + name + '?v=8';
     if (/\.css$/i.test(name)) loadCss(url);
     else chain = chain.then(function () { return loadJs(url); });
   });
