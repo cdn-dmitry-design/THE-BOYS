@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Что важно знать перед визитом</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Arsenal&family=Cormorant:wght@400&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="tbVisitDemo">
+  <button type="button" data-tb-pop="visit">Что важно знать перед визитом</button>
+</div>
+<div id="tbVisitMount" hidden></div>
+<style>
+#tbVisitDemo{min-height:100vh;display:flex;align-items:center;justify-content:center;margin:0;background:#f7f4ef;font-family:Arsenal,Arial,sans-serif}
+#tbVisitDemo button{margin:0;padding:14px 22px;border:0;border-radius:999px;background:#04100c;color:#fdf7ee;font:inherit;font-size:16px;letter-spacing:-.28px;cursor:pointer}
+#tbVisitDemo[hidden]{display:none!important}
+[id^=rec]:has(#tbVisitMount){padding:0!important;margin:0!important;min-height:0!important;height:0!important;overflow:hidden!important;border:0!important;background:none!important}
+[id^=rec]:has(#tbVisitMount) .t-container,[id^=rec]:has(#tbVisitMount) .t123,[id^=rec]:has(#tbVisitMount) .t123__content,[id^=rec]:has(#tbVisitMount) .t-col,[id^=rec]:has(#tbVisitMount) .t-width{max-width:none!important;width:100%!important;padding:0!important;margin:0!important;min-height:0!important;height:0!important;overflow:hidden!important}
+.tb-pop{position:fixed;inset:0;z-index:100000;background:rgba(4,16,12,.6);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);overflow:hidden;opacity:0;transition:opacity .6s cubic-bezier(.22,1,.36,1)}
+.tb-pop.is-on{opacity:1}
+.tb-pop[hidden]{display:none!important}
+.tb-pop__stage{position:absolute;left:0;top:0;transform-origin:top left;box-sizing:border-box}
+.tb-pop__stage *,.tb-pop__stage :before,.tb-pop__stage :after{box-sizing:border-box}
+.tb-pop__card{display:flex;flex-direction:column;width:608px;height:calc(100% - 46px);margin:46px auto 0;background:#fdf7ee;color:#04100c;-webkit-font-smoothing:antialiased;transform:translate3d(0,18px,0);transition:transform .7s cubic-bezier(.22,1,.36,1)}
+.tb-pop.is-on .tb-pop__card{transform:translate3d(0,0,0)}
+.tb-pop__close{display:flex;align-items:center;justify-content:center;gap:4px;flex:0 0 48px;height:48px;margin:0;padding:16px 16px 18px;border:0;background:0 0;color:#04100c;opacity:.4;font:400 14px/1 Arsenal,Arial,sans-serif;letter-spacing:-.28px;text-transform:uppercase;cursor:pointer}
+.tb-pop__close:hover,.tb-pop__close:focus-visible{opacity:.7}
+.tb-pop__close svg{display:block;flex:0 0 auto;transform:rotate(45deg)}
+.tb-pop__body{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;width:576px;margin:0 auto;padding:16px 0}
+.tb-pop__main{display:flex;flex-direction:column;align-items:flex-end;gap:16px;flex:1 1 auto;min-height:0;width:100%;overflow:auto;scrollbar-width:none}
+.tb-pop__main::-webkit-scrollbar{display:none}
+.tb-pop__title{width:100%;margin:0;font:400 40px/.75 Cormorant,"Times New Roman",serif;letter-spacing:-.8px;text-align:left}
+.tb-pop__acc{width:280px}
+.tb-pop__item+.tb-pop__item{margin-top:12px}
+.tb-pop__q{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;margin:0;padding:0;border:0;background:0 0;color:#04100c;font:400 14px/1 Arsenal,Arial,sans-serif;letter-spacing:-.28px;text-align:left;cursor:pointer}
+.tb-pop__q span{flex:1 1 auto;min-width:0}
+.tb-pop__plus{display:block;flex:0 0 auto;transform-origin:center;transition:transform .35s cubic-bezier(.45,0,.2,1)}
+.tb-pop__item.is-open .tb-pop__plus{transform:rotate(-45deg)}
+.tb-pop__a-wrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows .4s cubic-bezier(.45,0,.2,1)}
+.tb-pop__item.is-open .tb-pop__a-wrap{grid-template-rows:1fr}
+.tb-pop__a-inner{overflow:hidden;min-height:0}
+.tb-pop__a{margin:0;padding-top:12px;font:400 14px/1.2 Arsenal,Arial,sans-serif;letter-spacing:-.28px;text-indent:58px;color:#04100c;opacity:.4}
+.tb-pop__line{height:0;margin-top:12px;border:0;border-top:.5px solid #04100c}
+.tb-pop__foot{flex:0 0 auto;margin:16px 0 0;font:400 14px/1 Arsenal,Arial,sans-serif;letter-spacing:-.28px;text-align:center;color:#04100c;opacity:.4}
+.tb-pop__stage[data-ab="960"] .tb-pop__title,.tb-pop__stage[data-ab="640"] .tb-pop__title,.tb-pop__stage[data-ab="390"] .tb-pop__title{font-size:32px;letter-spacing:-.64px}
+.tb-pop__stage[data-ab="390"] .tb-pop__card{width:358px;height:calc(100% - 46px - 62px)}
+.tb-pop__stage[data-ab="390"] .tb-pop__body{width:100%;padding:16px}
+.tb-pop__stage[data-ab="390"] .tb-pop__main{align-items:stretch;gap:40px}
+.tb-pop__stage[data-ab="390"] .tb-pop__acc{width:100%}
+@media (prefers-reduced-motion:reduce){.tb-pop,.tb-pop__card,.tb-pop__plus,.tb-pop__a-wrap{transition:none}}
+</style>
+<script>
+(function(){
+var FAQ=[
+  {q:'Нужно ли записываться заранее?',a:'Шоурум THE BOYS работает по\u00a0записи, потому что наши гости ценят комфорт и\u00a0камерную атмосферу. Работа по\u00a0записи позволяет каждому нашему гостю выбирать и\u00a0примерять вещи в\u00a0спокойной обстановке без присутствия посторонних.'},
+  {q:'Что происходит на примерке?',a:'Сначала коротко говорим, зачем вы пришли. Дальше спокойно примеряете вещи без очереди и\u00a0посторонних: смотрим посадку, сочетания и\u00a0то, как вещь сидит именно на вас.'},
+  {q:'Стоит ли заранее говорить размер и пожелания?',a:'Если уже есть ориентир по\u00a0размеру, поводу или тому, чего точно не хочется\u00a0— напишите заранее. Это не обязательно, но так к\u00a0визиту можно подготовить вещи, а\u00a0не собирать всё на ходу.'},
+  {q:'Какая у вас ценовая категория?',a:'Мы не собираем гардероб на один выход: вещи рассчитаны на то, чтобы их носили долго. Точную вилку лучше назвать до визита или обсудить на месте, без сюрприза в\u00a0примерочной.'},
+  {q:'Что если мне нужна помощь с подбором полного образа?',a:'Можно прийти именно за этим. Соберём образ целиком\u00a0— от базы до деталей\u00a0— исходя из того, как вы живёте, а\u00a0не из абстрактного лука.'}
+];
+var PLUS='<svg class="tb-pop__plus" width="8" height="8" viewBox="0 0 8 8" aria-hidden="true"><path opacity=".4" d="M8 4.45669H4.48126V8H3.56608V4.45669H0V3.54331H3.56608V0H4.48126V3.54331H8V4.45669Z" fill="#04100C"/></svg>';
+var XICO='<svg width="8" height="8" viewBox="0 0 8 8" aria-hidden="true"><path d="M4 0V8" stroke="#04100C"/><path d="M8 4H0" stroke="#04100C"/></svg>';
+var root,stage,openI=0,locked=0,hideT=0,built=0,rsT=0,keyOn=0;
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function ab(w){return w>=1200?1200:w>=960?960:w>=640?640:390;}
+function scale(){
+  if(!stage)return;
+  var w=document.documentElement.clientWidth||innerWidth||320;if(w<320)w=320;
+  var h=innerHeight||document.documentElement.clientHeight||700,a=ab(w),sc=w/a;
+  stage.setAttribute('data-ab',a);stage.style.width=a+'px';stage.style.height=(h/sc)+'px';stage.style.transformOrigin='top left';stage.style.zoom=sc;
+}
+function setOpen(i){
+  openI=i;var items=stage.querySelectorAll('.tb-pop__item');
+  for(var n=0;n<items.length;n++){var on=n===i;items[n].classList.toggle('is-open',on);var b=items[n].querySelector('.tb-pop__q');if(b)b.setAttribute('aria-expanded',on?'true':'false');}
+}
+function render(){
+  var h='<div class="tb-pop__card" role="dialog" aria-modal="true" aria-labelledby="tbVisitTitle"><button type="button" class="tb-pop__close" data-close><span>закрыть</span>'+XICO+'</button><div class="tb-pop__body"><div class="tb-pop__main"><h2 class="tb-pop__title" id="tbVisitTitle">Что важно знать<br>перед визитом</h2><div class="tb-pop__acc">';
+  for(var i=0;i<FAQ.length;i++){var on=i===openI;h+='<div class="tb-pop__item'+(on?' is-open':'')+'"><button type="button" class="tb-pop__q" aria-expanded="'+(on?'true':'false')+'" data-i="'+i+'"><span>'+esc(FAQ[i].q)+'</span>'+PLUS+'</button><div class="tb-pop__a-wrap"><div class="tb-pop__a-inner"><p class="tb-pop__a">'+esc(FAQ[i].a)+'</p></div></div><div class="tb-pop__line"></div></div>';}
+  h+='</div></div><p class="tb-pop__foot">Не знаете, что именно нужно?<br>Ничего страшного. Разберёмся на месте.</p></div></div>';
+  stage.innerHTML=h;
+}
+function lock(on){if(on&&!locked){locked=1;document.documentElement.style.overflow=document.body.style.overflow='hidden';}else if(!on&&locked){locked=0;document.documentElement.style.overflow=document.body.style.overflow='';}}
+function noMotion(){return matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;}
+function onKey(e){if(e.key==='Escape'&&root&&!root.hidden)close();}
+function setKey(on){if(on===keyOn)return;keyOn=on;document[on?'addEventListener':'removeEventListener']('keydown',onKey);}
+function finish(){if(!root||root.classList.contains('is-on'))return;root.hidden=1;lock(0);setKey(0);}
+function open(){
+  ensure();if(!root||(!root.hidden&&root.classList.contains('is-on')))return;
+  clearTimeout(hideT);root.hidden=0;scale();lock(1);setKey(1);
+  if(noMotion())root.classList.add('is-on');
+  else{root.classList.remove('is-on');void root.offsetWidth;requestAnimationFrame(function(){root.classList.add('is-on');});}
+}
+function close(){if(!root||root.hidden)return;root.classList.remove('is-on');clearTimeout(hideT);if(noMotion())finish();else hideT=setTimeout(finish,760);}
+function onStage(e){
+  if(e.target===stage||e.target.closest('[data-close]')){close();return;}
+  var q=e.target.closest('.tb-pop__q');if(!q)return;var i=+q.getAttribute('data-i');setOpen(i===openI?-1:i);
+}
+function onDoc(e){var t=e.target.closest('[data-tb-pop=visit],a[href="#visit"],a[href="#tb-visit"]');if(!t)return;e.preventDefault();open();}
+function ensure(){
+  if(built)return;built=1;
+  root=document.getElementById('tbVisitPop');
+  if(!root){root=document.createElement('div');root.id='tbVisitPop';root.className='tb-pop uc-no-scale';root.hidden=1;stage=document.createElement('div');stage.className='tb-pop__stage';root.appendChild(stage);document.body.appendChild(root);}
+  else{stage=root.querySelector('.tb-pop__stage');root.classList.add('uc-no-scale');}
+  render();stage.addEventListener('click',onStage);
+  addEventListener('resize',function(){clearTimeout(rsT);rsT=setTimeout(function(){if(root&&!root.hidden)scale();},150);});
+}
+function boot(){
+  document.addEventListener('click',onDoc);
+  window.tbVisitPop={open:open,close:close,toggle:function(){root&&!root.hidden&&root.classList.contains('is-on')?close():open();}};
+  var demo=document.getElementById('tbVisitDemo');
+  if(document.getElementById('allrecords')){if(demo)demo.hidden=1;}
+  else{ensure();open();}
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+</script>
+</body>
+</html>
