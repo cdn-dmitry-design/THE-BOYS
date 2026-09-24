@@ -1,10 +1,10 @@
-/*! THE BOYS Tilda popups loader v24
+/*! THE BOYS Tilda popups loader v25
  * One-line T123 boot — see docs/tilda-embed.html
  * Triggers: #order #gift #visit #story-1
  */
 (function () {
   if (window.__tbPopups) return;
-  window.__tbPopups = { v: 24 };
+  window.__tbPopups = { v: 25 };
 
   var BASES = [
     'https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/',
@@ -88,20 +88,28 @@
     } catch (e) {}
   }
 
+  function disarmNow() {
+    pinning = 0;
+    holdUntil = 0;
+    restoring = 0;
+    if (patched) {
+      patched = 0;
+      window.scrollTo = _scrollTo;
+      window.scroll = _scroll;
+      window.scrollBy = _scrollBy;
+      Element.prototype.scrollIntoView = _scrollIntoView;
+    }
+    var y = window.__tbKeepY != null ? window.__tbKeepY : lastY;
+    if (y < 0) y = 0;
+    try { _scrollTo(0, y); } catch (e) {}
+  }
+
   function restoreY() {
-    restoring = 1;
-    holdUntil = Date.now() + 800;
-    pinning = Date.now() + 800;
-    forceY();
-    requestAnimationFrame(forceY);
-    setTimeout(forceY, 0);
-    setTimeout(forceY, 40);
-    setTimeout(forceY, 120);
-    setTimeout(forceY, 280);
-    setTimeout(function () { restoring = 0; forceY(); }, 400);
+    disarmNow();
   }
 
   window.__tbRestoreY = restoreY;
+  window.__tbReleaseScroll = disarmNow;
 
   function armScrollLock(ms) {
     pinning = Date.now() + (ms || 2000);
@@ -166,6 +174,12 @@
         if (POP[sk]) return sk;
       }
       if (POP[kind]) return kind;
+      if (el.classList) {
+        if (el.classList.contains('order')) return 'order';
+        if (el.classList.contains('gift')) return 'gift';
+        if (el.classList.contains('visit')) return 'visit';
+        if (el.classList.contains('story') || el.classList.contains('story-1')) return 'story-1';
+      }
       if (el.tagName === 'A' || el.tagName === 'AREA') {
         var fromHref = keyFromHref(el.getAttribute('href') || el.getAttribute('data-href') || '');
         if (fromHref) return fromHref;
@@ -179,24 +193,40 @@
     return keyFromHref(a.getAttribute('href') || a.getAttribute('data-href') || a.href || '');
   }
 
+  function classKey(el) {
+    if (!el || !el.classList) return '';
+    if (el.classList.contains('order')) return 'order';
+    if (el.classList.contains('gift')) return 'gift';
+    if (el.classList.contains('visit')) return 'visit';
+    if (el.classList.contains('story') || el.classList.contains('story-1')) return 'story-1';
+    var kind = String(el.getAttribute && el.getAttribute('data-tb-pop') || '').toLowerCase();
+    if (kind === 'story') return 'story-1';
+    return POP[kind] ? kind : '';
+  }
+
+  function stripAnchor(a, key) {
+    if (!a || !key) return;
+    a.setAttribute('data-tb-hash', key);
+    // javascript:void(0) и «#» Тильда всё равно уводит на первый экран
+    if (a.hasAttribute('href')) a.removeAttribute('href');
+    if (a.hasAttribute('data-href')) a.removeAttribute('data-href');
+    a.setAttribute('role', 'button');
+    a.style.cursor = 'pointer';
+  }
+
   function neutralizeLinks(root) {
     var scope = root && root.querySelectorAll ? root : document;
-    var list = scope.querySelectorAll('a[href], a[data-href], area[href]');
+    var list = scope.querySelectorAll('a[href], a[data-href], area[href], .order, .gift, .visit, .story, .story-1, [data-tb-pop]');
     for (var i = 0; i < list.length; i++) {
       var a = list[i];
       var href = a.getAttribute('href') || a.getAttribute('data-href') || '';
-      var key = keyFromHref(href);
+      var key = keyFromHref(href) || classKey(a);
       if (!key && a.getAttribute('data-tb-hash')) key = normHash(a.getAttribute('data-tb-hash'));
       if (!key) continue;
-      a.setAttribute('data-tb-hash', key);
-      // Убираем якорь полностью — иначе Тильда/браузер скроллят наверх
-      if (a.getAttribute('href') && a.getAttribute('href').indexOf('#') >= 0) {
-        a.setAttribute('href', 'javascript:void(0)');
-      }
-      if (a.getAttribute('data-href') && String(a.getAttribute('data-href')).indexOf('#') >= 0) {
-        a.setAttribute('data-href', 'javascript:void(0)');
-      }
-      a.style.cursor = 'pointer';
+      stripAnchor(a, key);
+      if (!a.querySelectorAll) continue;
+      var inner = a.querySelectorAll('a[href], a[data-href]');
+      for (var j = 0; j < inner.length; j++) stripAnchor(inner[j], key);
     }
   }
 
@@ -210,7 +240,7 @@
       lastOpen = key;
       lastOpenAt = now;
       pending = '';
-      armScrollLock(2500);
+      armScrollLock(160);
       forceY();
       api.open(key);
       forceY();
@@ -227,8 +257,8 @@
     if (!key) return;
 
     if (!isLocked()) freezeY(true);
-    holdUntil = Date.now() + 2000;
-    armScrollLock(2500);
+    holdUntil = Date.now() + 200;
+    armScrollLock(160);
 
     if (e.cancelable && e.preventDefault) e.preventDefault();
     if (e.stopPropagation) e.stopPropagation();
@@ -236,6 +266,8 @@
 
     clearPopHash();
     forceY();
+    requestAnimationFrame(forceY);
+    setTimeout(forceY, 0);
 
     if (e.type === 'click' || e.type === 'pointerup' || e.type === 'keyup') openKey(key);
   }
@@ -269,7 +301,7 @@
     var key = normHash(location.hash);
     if (!POP[key]) return;
     clearPopHash();
-    armScrollLock(2500);
+    armScrollLock(160);
     forceY();
     openKey(key);
   });
@@ -278,7 +310,7 @@
     var bootKey = normHash(location.hash);
     freezeY(true);
     clearPopHash();
-    armScrollLock(2500);
+    armScrollLock(160);
     setTimeout(function () { openKey(bootKey); }, 0);
   }
 
@@ -286,7 +318,7 @@
   var wasLocked = 0;
   setInterval(function () {
     var now = isLocked() ? 1 : 0;
-    if (wasLocked && !now) restoreY();
+    if (wasLocked && !now) disarmNow();
     wasLocked = now;
   }, 100);
 
@@ -328,7 +360,7 @@
     'visit.css', 'visit.js',
     'story.css', 'story.js'
   ];
-  var VER = 'v=24';
+  var VER = 'v=25';
 
   function loadCss(href) {
     var l = document.createElement('link');

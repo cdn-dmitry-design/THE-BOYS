@@ -27,7 +27,7 @@ function render(){
   h+='</div></div><p class="tb-pop__foot">Не знаете, что именно нужно?<br>Ничего страшного. Разберёмся на месте.</p></div></div>';
   stage.innerHTML=h;
 }
-function lock(on){if(on&&!locked){locked=1;document.documentElement.style.overflow=document.body.style.overflow='hidden';}else if(!on&&locked){locked=0;document.documentElement.style.overflow=document.body.style.overflow='';}}
+function lock(on){var html=document.documentElement;if(on&&!locked){locked=1;html.classList.add('tb-visit-lock');html.style.overflow=document.body.style.overflow='hidden';}else if(!on&&locked){locked=0;html.classList.remove('tb-visit-lock');html.style.overflow=document.body.style.overflow='';}}
 function noMotion(){return matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;}
 function onKey(e){if(e.key==='Escape'&&root&&!root.hidden)close();}
 function setKey(on){if(on===keyOn)return;keyOn=on;document[on?'addEventListener':'removeEventListener']('keydown',onKey);}
@@ -38,7 +38,7 @@ function open(){
   if(noMotion())root.classList.add('is-on');
   else{root.classList.remove('is-on');void root.offsetWidth;requestAnimationFrame(function(){root.classList.add('is-on');});}
 }
-function close(){if(!root||root.hidden)return;root.classList.remove('is-on');root.classList.add('is-out');clearTimeout(hideT);if(noMotion())finish();else hideT=setTimeout(finish,720);}
+function close(){if(!root||root.hidden)return;root.classList.remove('is-on');root.classList.add('is-out');clearTimeout(hideT);lock(0);if(window.__tbReleaseScroll)window.__tbReleaseScroll();if(noMotion())finish();else hideT=setTimeout(finish,720);}
 function onStage(e){
   if(e.target===stage||e.target.closest('[data-close]')){close();return;}
   var q=e.target.closest('.tb-pop__q');if(!q)return;var i=+q.getAttribute('data-i');setOpen(i===openI?-1:i);

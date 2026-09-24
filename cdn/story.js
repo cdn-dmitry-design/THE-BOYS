@@ -252,6 +252,8 @@ function close(){
   root.classList.add('is-out');
   clearTimeout(hideT);
   if(rafId){cancelAnimationFrame(rafId);rafId=0;}
+  lock(0);
+  if(window.__tbReleaseScroll)window.__tbReleaseScroll();
   if(noMotion())finish();
   else hideT=setTimeout(finish,720);
 }
