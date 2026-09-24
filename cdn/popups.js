@@ -1,9 +1,11 @@
 /*! THE BOYS Tilda popups loader
  * One line for Tilda HTML block (обязательно с ?v= — иначе кэш Тильды/браузера):
- * <script src="https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/popups.js?v=8"></script>
+ * <script src="https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/popups.js?v=9"></script>
  *
- * Triggers (классы БЕЗ точки в поле Тильды):
- *   story-1  story-2  story-3  visit  order  gift
+ * Triggers (классы БЕЗ точки, через ПРОБЕЛ, не через запятую):
+ *   story-1 story-2 story-3 visit order gift
+ *   верно:  order arrow-bottom
+ *   неверно: order, arrow-bottom   ← запятая ломает класс
  * Also: data-tb-pop="…" / legacy #hash links.
  *
  * Forms still go through native Tilda form blocks on the page
@@ -54,8 +56,9 @@
     var raw = '';
     if (typeof el.className === 'string') raw = el.className;
     else if (el.getAttribute) raw = el.getAttribute('class') || '';
-    return String(raw).replace(/^\./, '').split(/\s+/).map(function (t) {
-      return String(t || '').replace(/^\./, '').toLowerCase();
+    // Tilda Zero Block: classes with spaces. Commas (order, gift) make tokens like "order," — strip them.
+    return String(raw).split(/[\s,]+/).map(function (t) {
+      return String(t || '').replace(/^\.+/, '').replace(/\.+$/, '').toLowerCase();
     }).filter(Boolean);
   }
 
@@ -195,7 +198,7 @@
 
   var chain = Promise.resolve();
   FILES.forEach(function (name) {
-    var url = BASE + name + '?v=8';
+    var url = BASE + name + '?v=9';
     if (/\.css$/i.test(name)) loadCss(url);
     else chain = chain.then(function () { return loadJs(url); });
   });
