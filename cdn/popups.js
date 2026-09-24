@@ -1,10 +1,10 @@
-/*! THE BOYS Tilda popups loader v15
+/*! THE BOYS Tilda popups loader v16
  * One-line T123 boot — see docs/tilda-embed.html
  * Triggers: #order #gift #visit #story-1
  */
 (function () {
   if (window.__tbPopups) return;
-  window.__tbPopups = { v: 15 };
+  window.__tbPopups = { v: 16 };
 
   var BASES = [
     'https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/',
@@ -320,7 +320,7 @@
     'visit.css', 'visit.js',
     'story.css', 'story.js'
   ];
-  var VER = 'v=15';
+  var VER = 'v=16';
 
   function loadCss(href) {
     var l = document.createElement('link');
