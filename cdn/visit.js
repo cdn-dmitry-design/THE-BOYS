@@ -31,14 +31,14 @@ function lock(on){if(on&&!locked){locked=1;document.documentElement.style.overfl
 function noMotion(){return matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;}
 function onKey(e){if(e.key==='Escape'&&root&&!root.hidden)close();}
 function setKey(on){if(on===keyOn)return;keyOn=on;document[on?'addEventListener':'removeEventListener']('keydown',onKey);}
-function finish(){if(!root||root.classList.contains('is-on'))return;root.hidden=1;lock(0);setKey(0);}
+function finish(){if(!root||root.classList.contains('is-on'))return;root.hidden=1;root.classList.remove('is-out');lock(0);setKey(0);}
 function open(){
   ensure();if(!root||(!root.hidden&&root.classList.contains('is-on')))return;
-  clearTimeout(hideT);root.hidden=0;scale();lock(1);setKey(1);
+  clearTimeout(hideT);root.classList.remove('is-out');root.hidden=0;scale();lock(1);setKey(1);
   if(noMotion())root.classList.add('is-on');
   else{root.classList.remove('is-on');void root.offsetWidth;requestAnimationFrame(function(){root.classList.add('is-on');});}
 }
-function close(){if(!root||root.hidden)return;root.classList.remove('is-on');clearTimeout(hideT);if(noMotion())finish();else hideT=setTimeout(finish,760);}
+function close(){if(!root||root.hidden)return;root.classList.remove('is-on');root.classList.add('is-out');clearTimeout(hideT);if(noMotion())finish();else hideT=setTimeout(finish,420);}
 function onStage(e){
   if(e.target===stage||e.target.closest('[data-close]')){close();return;}
   var q=e.target.closest('.tb-pop__q');if(!q)return;var i=+q.getAttribute('data-i');setOpen(i===openI?-1:i);
