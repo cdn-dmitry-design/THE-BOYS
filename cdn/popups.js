@@ -1,10 +1,10 @@
-/*! THE BOYS Tilda popups loader v14
+/*! THE BOYS Tilda popups loader v15
  * One-line T123 boot — see docs/tilda-embed.html
- * Triggers: #order #gift #visit #story-1 (no page jump)
+ * Triggers: #order #gift #visit #story-1
  */
 (function () {
   if (window.__tbPopups) return;
-  window.__tbPopups = { v: 14 };
+  window.__tbPopups = { v: 15 };
 
   var BASES = [
     'https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/',
@@ -34,52 +34,77 @@
     'story-3': 'tbStoryPop',
     story: 'tbStoryPop'
   };
-  var TRIG = ['story-1', 'story-2', 'story-3', 'visit', 'order', 'gift'];
   var pending = '';
-  var lastY = readY();
+  var lastY = 0;
   var holdUntil = 0;
   var lastOpen = '';
   var lastOpenAt = 0;
   var pinning = 0;
+  var restoring = 0;
   var patched = 0;
-  var _scrollTo = window.scrollTo;
-  var _scroll = window.scroll;
-  var _scrollBy = window.scrollBy;
+  var _scrollTo = window.scrollTo.bind(window);
+  var _scroll = window.scroll.bind(window);
+  var _scrollBy = window.scrollBy.bind(window);
   var _scrollIntoView = Element.prototype.scrollIntoView;
+
+  window.__tbNativeScrollTo = function (x, y) {
+    if (typeof x === 'object' && x) {
+      y = x.top != null ? x.top : y;
+      x = x.left != null ? x.left : 0;
+    }
+    _scrollTo(x || 0, y || 0);
+  };
 
   function readY() {
     return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+  }
+
+  function isLocked() {
+    var html = document.documentElement;
+    return html.classList.contains('tb-order-lock') || html.classList.contains('tb-gift-lock') || html.classList.contains('tb-story-lock') || html.classList.contains('tb-visit-lock');
   }
 
   function normHash(h) {
     return String(h || '').replace(/^#/, '').split(/[?&/]/)[0].toLowerCase();
   }
 
-  function classTokens(el) {
-    if (!el) return [];
-    var raw = typeof el.className === 'string' ? el.className : (el.getAttribute && el.getAttribute('class')) || '';
-    return String(raw).split(/[\s,]+/).map(function (t) {
-      return String(t || '').replace(/^\.+/, '').toLowerCase();
-    }).filter(Boolean);
-  }
-
-  function freezeY() {
-    lastY = readY();
-    if (lastY < 0) lastY = 0;
+  function freezeY(force) {
+    if (!force && (restoring || Date.now() < holdUntil || Date.now() < pinning || isLocked())) return;
+    var y = readY();
+    if (y < 0) y = 0;
+    // Не затираем сохранённую позицию нулём, пока открыт/закрывается попап
+    if (!force && y < 2 && lastY > 2) return;
+    lastY = y;
     window.__tbKeepY = lastY;
   }
 
   function forceY() {
     var y = window.__tbKeepY != null ? window.__tbKeepY : lastY;
+    if (y < 0) y = 0;
     try {
-      _scrollTo.call(window, 0, y);
+      _scrollTo(0, y);
       document.documentElement.scrollTop = y;
       if (document.body) document.body.scrollTop = y;
     } catch (e) {}
   }
 
-  function armScrollLock() {
-    pinning = Date.now() + 1500;
+  function restoreY() {
+    restoring = 1;
+    holdUntil = Date.now() + 800;
+    pinning = Date.now() + 800;
+    forceY();
+    requestAnimationFrame(forceY);
+    setTimeout(forceY, 0);
+    setTimeout(forceY, 40);
+    setTimeout(forceY, 120);
+    setTimeout(forceY, 280);
+    setTimeout(function () { restoring = 0; forceY(); }, 400);
+  }
+
+  window.__tbRestoreY = restoreY;
+
+  function armScrollLock(ms) {
+    pinning = Date.now() + (ms || 2000);
     holdUntil = Math.max(holdUntil, pinning);
     if (patched) return;
     patched = 1;
@@ -87,11 +112,11 @@
     window.scroll = function () { forceY(); };
     window.scrollBy = function () { forceY(); };
     Element.prototype.scrollIntoView = function () { forceY(); };
-    setTimeout(disarmScrollLock, 1500);
   }
 
-  function disarmScrollLock() {
+  function maybeDisarm() {
     if (!patched) return;
+    if (Date.now() < pinning || isLocked() || restoring) return;
     patched = 0;
     window.scrollTo = _scrollTo;
     window.scroll = _scroll;
@@ -100,17 +125,15 @@
     forceY();
   }
 
-  function pinScroll() {
-    armScrollLock();
-    forceY();
-    var n = 0;
-    function tick() {
-      if (Date.now() > pinning || n++ > 90) return;
-      forceY();
-      requestAnimationFrame(tick);
+  setInterval(function () {
+    if (isLocked()) {
+      pinning = Date.now() + 600;
+      holdUntil = Math.max(holdUntil, pinning);
+      if (!patched) armScrollLock(600);
+    } else {
+      maybeDisarm();
     }
-    requestAnimationFrame(tick);
-  }
+  }, 200);
 
   function clearPopHash() {
     var key = normHash(location.hash);
@@ -132,50 +155,49 @@
     if (!node || !node.closest) return '';
 
     var el = node;
-    for (var d = 0; el && d < 16; d++, el = el.parentElement) {
-      if (el.getAttribute) {
-        var dh = el.getAttribute('data-tb-hash');
-        if (dh && POP[normHash(dh)]) return normHash(dh);
-        var kind = String(el.getAttribute('data-tb-pop') || '').toLowerCase();
-        if (kind === 'story') {
-          var sid = String(el.getAttribute('data-tb-story') || '1').toLowerCase();
-          var sk = sid.indexOf('story-') === 0 ? sid : 'story-' + sid;
-          if (POP[sk]) return sk;
-        }
-        if (POP[kind]) return kind;
+    for (var d = 0; el && d < 20; d++, el = el.parentElement) {
+      if (!el.getAttribute) continue;
+      var dh = el.getAttribute('data-tb-hash');
+      if (dh && POP[normHash(dh)]) return normHash(dh);
+      var kind = String(el.getAttribute('data-tb-pop') || '').toLowerCase();
+      if (kind === 'story') {
+        var sid = String(el.getAttribute('data-tb-story') || '1').toLowerCase();
+        var sk = sid.indexOf('story-') === 0 ? sid : 'story-' + sid;
+        if (POP[sk]) return sk;
       }
-      var tokens = classTokens(el);
-      for (var i = 0; i < TRIG.length; i++) {
-        if (tokens.indexOf(TRIG[i]) >= 0) return TRIG[i];
+      if (POP[kind]) return kind;
+      if (el.tagName === 'A' || el.tagName === 'AREA') {
+        var fromHref = keyFromHref(el.getAttribute('href') || el.getAttribute('data-href') || '');
+        if (fromHref) return fromHref;
       }
     }
-
-    var a = node.closest('a[href], area[href]');
+    var a = node.closest('a[href], a[data-tb-hash], a[data-href], area[href]');
     if (!a) return '';
-    var fromData = a.getAttribute('data-tb-hash');
-    if (fromData && POP[normHash(fromData)]) return normHash(fromData);
-    return keyFromHref(a.getAttribute('href') || a.href || '');
+    if (a.getAttribute('data-tb-hash') && POP[normHash(a.getAttribute('data-tb-hash'))]) {
+      return normHash(a.getAttribute('data-tb-hash'));
+    }
+    return keyFromHref(a.getAttribute('href') || a.getAttribute('data-href') || a.href || '');
   }
 
-  /** Убираем настоящий якорь у ссылок — иначе браузер/Тильда скроллят наверх */
   function neutralizeLinks(root) {
-    var list = (root || document).querySelectorAll('a[href], area[href]');
+    var scope = root && root.querySelectorAll ? root : document;
+    var list = scope.querySelectorAll('a[href], a[data-href], area[href]');
     for (var i = 0; i < list.length; i++) {
       var a = list[i];
-      if (a.getAttribute('data-tb-hash')) continue;
-      var key = keyFromHref(a.getAttribute('href') || '');
+      var href = a.getAttribute('href') || a.getAttribute('data-href') || '';
+      var key = keyFromHref(href);
+      if (!key && a.getAttribute('data-tb-hash')) key = normHash(a.getAttribute('data-tb-hash'));
       if (!key) continue;
       a.setAttribute('data-tb-hash', key);
-      a.setAttribute('href', 'javascript:void(0)');
+      // Убираем якорь полностью — иначе Тильда/браузер скроллят наверх
+      if (a.getAttribute('href') && a.getAttribute('href').indexOf('#') >= 0) {
+        a.setAttribute('href', 'javascript:void(0)');
+      }
+      if (a.getAttribute('data-href') && String(a.getAttribute('data-href')).indexOf('#') >= 0) {
+        a.setAttribute('data-href', 'javascript:void(0)');
+      }
       a.style.cursor = 'pointer';
     }
-  }
-
-  function remember() {
-    if (Date.now() < holdUntil || Date.now() < pinning) return;
-    var html = document.documentElement;
-    if (html.classList.contains('tb-order-lock') || html.classList.contains('tb-gift-lock') || html.classList.contains('tb-story-lock') || html.classList.contains('tb-visit-lock')) return;
-    freezeY();
   }
 
   function openKey(key) {
@@ -188,6 +210,7 @@
       lastOpen = key;
       lastOpenAt = now;
       pending = '';
+      armScrollLock(2500);
       forceY();
       api.open(key);
       forceY();
@@ -203,21 +226,20 @@
     var key = keyFromNode(e.target);
     if (!key) return;
 
-    // Запомнить Y до любого скролла якоря
-    if (Date.now() >= holdUntil) freezeY();
-    holdUntil = Date.now() + 1500;
+    if (!isLocked()) freezeY(true);
+    holdUntil = Date.now() + 2000;
+    armScrollLock(2500);
 
     if (e.cancelable && e.preventDefault) e.preventDefault();
     if (e.stopPropagation) e.stopPropagation();
     if (e.stopImmediatePropagation) e.stopImmediatePropagation();
 
     clearPopHash();
-    pinScroll();
+    forceY();
 
     if (e.type === 'click' || e.type === 'pointerup' || e.type === 'keyup') openKey(key);
   }
 
-  // CSS: запрет smooth-scroll на время жизни страницы для наших кейсов
   (function () {
     var st = document.createElement('style');
     st.id = 'tb-pop-noscroll';
@@ -225,12 +247,14 @@
     (document.head || document.documentElement).appendChild(st);
   })();
 
+  freezeY(true);
+
   window.addEventListener('scroll', function () {
-    if (Date.now() < pinning) {
-      forceY();
+    if (restoring || Date.now() < pinning || isLocked()) {
+      if (restoring || Date.now() < pinning || isLocked()) forceY();
       return;
     }
-    remember();
+    freezeY(false);
   }, { passive: true });
 
   ['pointerdown', 'mousedown', 'touchstart', 'click', 'pointerup', 'touchend'].forEach(function (ev) {
@@ -244,25 +268,33 @@
   window.addEventListener('hashchange', function () {
     var key = normHash(location.hash);
     if (!POP[key]) return;
-    // НЕ вызываем remember() — страница уже могла уехать вверх
     clearPopHash();
-    pinScroll();
+    armScrollLock(2500);
+    forceY();
     openKey(key);
   });
 
   if (POP[normHash(location.hash)]) {
     var bootKey = normHash(location.hash);
-    freezeY();
+    freezeY(true);
     clearPopHash();
-    pinScroll();
+    armScrollLock(2500);
     setTimeout(function () { openKey(bootKey); }, 0);
   }
 
+  // После закрытия попапа — вернуть Y (класс lock сняли)
+  var wasLocked = 0;
+  setInterval(function () {
+    var now = isLocked() ? 1 : 0;
+    if (wasLocked && !now) restoreY();
+    wasLocked = now;
+  }, 100);
+
   function bootScan() {
     neutralizeLinks(document);
-    setTimeout(function () { neutralizeLinks(document); }, 400);
-    setTimeout(function () { neutralizeLinks(document); }, 1200);
-    setTimeout(function () { neutralizeLinks(document); }, 3000);
+    [400, 1000, 2000, 4000].forEach(function (t) {
+      setTimeout(function () { neutralizeLinks(document); }, t);
+    });
     if (typeof MutationObserver !== 'undefined') {
       try {
         var mo = new MutationObserver(function (muts) {
@@ -274,10 +306,10 @@
                 if (n && n.nodeType === 1) neutralizeLinks(n);
               }
             }
-            if (m.type === 'attributes' && m.target && m.target.tagName === 'A') neutralizeLinks(m.target.parentNode || document);
+            if (m.type === 'attributes' && m.target) neutralizeLinks(m.target.parentNode || document);
           }
         });
-        mo.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['href'] });
+        mo.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['href', 'data-href'] });
       } catch (e) {}
     }
   }
@@ -288,7 +320,7 @@
     'visit.css', 'visit.js',
     'story.css', 'story.js'
   ];
-  var VER = 'v=14';
+  var VER = 'v=15';
 
   function loadCss(href) {
     var l = document.createElement('link');
