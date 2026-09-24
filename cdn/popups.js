@@ -19,7 +19,8 @@
     card: 'tbGiftPop',
     podarok: 'tbGiftPop',
     visit: 'tbVisitPop',
-    'tb-visit': 'tbVisitPop'
+    'tb-visit': 'tbVisitPop',
+    'story-1': 'tbStoryPop'
   };
   var pending = '';
   var lastY = window.pageYOffset || document.documentElement.scrollTop || 0;
@@ -52,7 +53,7 @@
   function remember() {
     if (Date.now() < holdUntil) return;
     var html = document.documentElement;
-    if (html.classList.contains('tb-order-lock') || html.classList.contains('tb-gift-lock')) return;
+    if (html.classList.contains('tb-order-lock') || html.classList.contains('tb-gift-lock') || html.classList.contains('tb-story-lock')) return;
     lastY = window.pageYOffset || html.scrollTop || 0;
   }
 
@@ -64,7 +65,7 @@
       lastOpen = key;
       lastOpenAt = now;
       pending = '';
-      api.open();
+      api.open(key);
       return true;
     }
     pending = key;
@@ -73,7 +74,7 @@
 
   function stay() {
     var html = document.documentElement;
-    if (html.classList.contains('tb-order-lock') || html.classList.contains('tb-gift-lock')) return;
+    if (html.classList.contains('tb-order-lock') || html.classList.contains('tb-gift-lock') || html.classList.contains('tb-story-lock')) return;
     if (Math.abs((window.pageYOffset || html.scrollTop || 0) - lastY) > 1) window.scrollTo(0, lastY);
   }
 
@@ -112,7 +113,8 @@
   var FILES = [
     'order.css', 'order.js',
     'gift.css', 'gift.js',
-    'visit.css', 'visit.js'
+    'visit.css', 'visit.js',
+    'story.css', 'story.js'
   ];
 
   function loadCss(href) {
@@ -135,7 +137,7 @@
 
   var chain = Promise.resolve();
   FILES.forEach(function (name) {
-    var url = BASE + name + '?v=4';
+    var url = BASE + name + '?v=5';
     if (/\.css$/i.test(name)) loadCss(url);
     else chain = chain.then(function () { return loadJs(url); });
   });
