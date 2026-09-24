@@ -36,6 +36,14 @@
   var lastOpen = '';
   var lastOpenAt = 0;
 
+  (function injectCursor() {
+    if (document.getElementById('tb-pop-cursor')) return;
+    var st = document.createElement('style');
+    st.id = 'tb-pop-cursor';
+    st.textContent = CLASS_SEL + '{cursor:pointer}';
+    (document.head || document.documentElement).appendChild(st);
+  })();
+
   function classKey(node) {
     if (!node) return '';
     if (node.nodeType === 3) node = node.parentElement;
@@ -167,7 +175,7 @@
 
   var chain = Promise.resolve();
   FILES.forEach(function (name) {
-    var url = BASE + name + '?v=6';
+    var url = BASE + name + '?v=7';
     if (/\.css$/i.test(name)) loadCss(url);
     else chain = chain.then(function () { return loadJs(url); });
   });
