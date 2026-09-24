@@ -1,10 +1,10 @@
-/*! THE BOYS Tilda popups loader v27
- * One-line T123 boot — see docs/tilda-embed.html
+/*! THE BOYS Tilda popups loader v28
+ * Lightweight: lazy popup files, no scroll RAF loop, no heavy DOM scans
  * Triggers: #order #gift #visit #story-1
  */
 (function () {
   if (window.__tbPopups) return;
-  window.__tbPopups = { v: 27 };
+  window.__tbPopups = { v: 28 };
 
   var BASES = [
     'https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/',
@@ -34,18 +34,25 @@
     'story-3': 'tbStoryPop',
     story: 'tbStoryPop'
   };
+
+  var BUNDLE = {
+    tbOrderPop: ['order.css', 'order.js'],
+    tbGiftPop: ['gift.css', 'gift.js'],
+    tbVisitPop: ['visit.css', 'visit.js'],
+    tbStoryPop: ['story.css', 'story.js']
+  };
+
+  var VER = 'v=28';
   var pending = '';
   var lastY = 0;
-  var holdUntil = 0;
   var lastOpen = '';
   var lastOpenAt = 0;
-  var pinning = 0;
-  var restoring = 0;
-  var patched = 0;
   var jumpUntil = 0;
-  var jumpRaf = 0;
-  var anchorBanUntil = 0;
-  var userScroll = 0;
+  var patched = 0;
+  var loading = {};
+  var cssDone = {};
+  var warmed = 0;
+
   var _scrollTo = window.scrollTo.bind(window);
   var _scroll = window.scroll.bind(window);
   var _scrollBy = window.scrollBy.bind(window);
@@ -65,19 +72,22 @@
 
   function isLocked() {
     var html = document.documentElement;
-    return html.classList.contains('tb-order-lock') || html.classList.contains('tb-gift-lock') || html.classList.contains('tb-story-lock') || html.classList.contains('tb-visit-lock');
+    return (
+      html.classList.contains('tb-order-lock') ||
+      html.classList.contains('tb-gift-lock') ||
+      html.classList.contains('tb-story-lock') ||
+      html.classList.contains('tb-visit-lock')
+    );
   }
 
   function normHash(h) {
     return String(h || '').replace(/^#/, '').split(/[?&/]/)[0].toLowerCase();
   }
 
-  function freezeY(force) {
+  function rememberY() {
     var y = readY();
     if (y < 0) y = 0;
-    // Прыжок наверх не должен затирать место, где человек был
     if (y < 2 && lastY > 2) return;
-    if (!force && (restoring || Date.now() < holdUntil || Date.now() < pinning || Date.now() < jumpUntil || isLocked())) return;
     lastY = y;
     window.__tbKeepY = lastY;
   }
@@ -93,12 +103,7 @@
   }
 
   function disarmNow() {
-    pinning = 0;
-    holdUntil = 0;
-    restoring = 0;
     jumpUntil = 0;
-    anchorBanUntil = Date.now() + 2500;
-    if (jumpRaf) { cancelAnimationFrame(jumpRaf); jumpRaf = 0; }
     if (patched) {
       patched = 0;
       window.scrollTo = _scrollTo;
@@ -111,50 +116,36 @@
     try { _scrollTo(0, y); } catch (e) {}
   }
 
-  function restoreY() {
-    disarmNow();
-  }
-
-  window.__tbRestoreY = restoreY;
+  window.__tbRestoreY = disarmNow;
   window.__tbReleaseScroll = disarmNow;
 
-  function jumpLoop() {
-    jumpRaf = 0;
-    if (Date.now() >= jumpUntil) return;
-    forceY();
-    jumpRaf = requestAnimationFrame(jumpLoop);
-  }
-
+  /* Короткий lock только на момент открытия — без RAF-петли на 2.5с */
   function armScrollLock(ms) {
-    var y = readY();
-    if (!(y < 2 && lastY > 2)) freezeY(true);
-    jumpUntil = Date.now() + (ms || 2500);
-    pinning = jumpUntil;
-    holdUntil = Math.max(holdUntil, pinning);
+    rememberY();
+    jumpUntil = Date.now() + (ms || 900);
     if (!patched) {
       patched = 1;
-      window.scrollTo = function () { if (Date.now() < jumpUntil || isLocked()) forceY(); else _scrollTo.apply(window, arguments); };
-      window.scroll = function () { if (Date.now() < jumpUntil || isLocked()) forceY(); else _scroll.apply(window, arguments); };
-      window.scrollBy = function () { if (Date.now() < jumpUntil || isLocked()) forceY(); else _scrollBy.apply(window, arguments); };
-      Element.prototype.scrollIntoView = function () { if (Date.now() < jumpUntil || isLocked()) forceY(); else _scrollIntoView.apply(this, arguments); };
+      window.scrollTo = function () {
+        if (Date.now() < jumpUntil || isLocked()) forceY();
+        else _scrollTo.apply(window, arguments);
+      };
+      window.scroll = function () {
+        if (Date.now() < jumpUntil || isLocked()) forceY();
+        else _scroll.apply(window, arguments);
+      };
+      window.scrollBy = function () {
+        if (Date.now() < jumpUntil || isLocked()) forceY();
+        else _scrollBy.apply(window, arguments);
+      };
+      Element.prototype.scrollIntoView = function () {
+        if (Date.now() < jumpUntil || isLocked()) forceY();
+        else _scrollIntoView.apply(this, arguments);
+      };
     }
-    if (!jumpRaf) jumpRaf = requestAnimationFrame(jumpLoop);
+    setTimeout(function () {
+      if (!isLocked() && Date.now() >= jumpUntil) disarmNow();
+    }, (ms || 900) + 50);
   }
-
-  function maybeDisarm() {
-    if (!patched) return;
-    if (Date.now() < pinning || isLocked() || restoring) return;
-    patched = 0;
-    window.scrollTo = _scrollTo;
-    window.scroll = _scroll;
-    window.scrollBy = _scrollBy;
-    Element.prototype.scrollIntoView = _scrollIntoView;
-    forceY();
-  }
-
-  setInterval(function () {
-    if (!isLocked() && Date.now() >= jumpUntil) maybeDisarm();
-  }, 200);
 
   function clearPopHash() {
     var key = normHash(location.hash);
@@ -175,35 +166,31 @@
     if (node.nodeType === 3) node = node.parentElement;
     if (!node || !node.closest) return '';
 
-    var el = node;
-    for (var d = 0; el && d < 20; d++, el = el.parentElement) {
-      if (!el.getAttribute) continue;
-      var dh = el.getAttribute('data-tb-hash');
-      if (dh && POP[normHash(dh)]) return normHash(dh);
-      var kind = String(el.getAttribute('data-tb-pop') || '').toLowerCase();
-      if (kind === 'story') {
-        var sid = String(el.getAttribute('data-tb-story') || '1').toLowerCase();
-        var sk = sid.indexOf('story-') === 0 ? sid : 'story-' + sid;
-        if (POP[sk]) return sk;
-      }
-      if (POP[kind]) return kind;
-      if (el.classList) {
-        if (el.classList.contains('order')) return 'order';
-        if (el.classList.contains('gift')) return 'gift';
-        if (el.classList.contains('visit')) return 'visit';
-        if (el.classList.contains('story') || el.classList.contains('story-1')) return 'story-1';
-      }
-      if (el.tagName === 'A' || el.tagName === 'AREA') {
-        var fromHref = keyFromHref(el.getAttribute('href') || el.getAttribute('data-href') || '');
-        if (fromHref) return fromHref;
-      }
+    /* быстрый путь через closest вместо ручного обхода */
+    var hit = node.closest(
+      '[data-tb-hash],[data-tb-pop],a[href],a[data-href],area[href],.order,.gift,.visit,.story,.story-1'
+    );
+    if (!hit) return '';
+
+    var dh = hit.getAttribute('data-tb-hash');
+    if (dh && POP[normHash(dh)]) return normHash(dh);
+
+    var kind = String(hit.getAttribute('data-tb-pop') || '').toLowerCase();
+    if (kind === 'story') {
+      var sid = String(hit.getAttribute('data-tb-story') || '1').toLowerCase();
+      var sk = sid.indexOf('story-') === 0 ? sid : 'story-' + sid;
+      if (POP[sk]) return sk;
     }
-    var a = node.closest('a[href], a[data-tb-hash], a[data-href], area[href]');
-    if (!a) return '';
-    if (a.getAttribute('data-tb-hash') && POP[normHash(a.getAttribute('data-tb-hash'))]) {
-      return normHash(a.getAttribute('data-tb-hash'));
+    if (POP[kind]) return kind;
+
+    if (hit.classList) {
+      if (hit.classList.contains('order')) return 'order';
+      if (hit.classList.contains('gift')) return 'gift';
+      if (hit.classList.contains('visit')) return 'visit';
+      if (hit.classList.contains('story') || hit.classList.contains('story-1')) return 'story-1';
     }
-    return keyFromHref(a.getAttribute('href') || a.getAttribute('data-href') || a.href || '');
+
+    return keyFromHref(hit.getAttribute('href') || hit.getAttribute('data-href') || '');
   }
 
   function classKey(el) {
@@ -212,7 +199,7 @@
     if (el.classList.contains('gift')) return 'gift';
     if (el.classList.contains('visit')) return 'visit';
     if (el.classList.contains('story') || el.classList.contains('story-1')) return 'story-1';
-    var kind = String(el.getAttribute && el.getAttribute('data-tb-pop') || '').toLowerCase();
+    var kind = String((el.getAttribute && el.getAttribute('data-tb-pop')) || '').toLowerCase();
     if (kind === 'story') return 'story-1';
     return POP[kind] ? kind : '';
   }
@@ -220,7 +207,6 @@
   function stripAnchor(a, key) {
     if (!a || !key) return;
     a.setAttribute('data-tb-hash', key);
-    // javascript:void(0) и «#» Тильда всё равно уводит на первый экран
     if (a.hasAttribute('href')) a.removeAttribute('href');
     if (a.hasAttribute('data-href')) a.removeAttribute('data-href');
     a.setAttribute('role', 'button');
@@ -229,7 +215,9 @@
 
   function neutralizeLinks(root) {
     var scope = root && root.querySelectorAll ? root : document;
-    var list = scope.querySelectorAll('a[href], a[data-href], area[href], .order, .gift, .visit, .story, .story-1, [data-tb-pop]');
+    var list = scope.querySelectorAll(
+      'a[href*="#order"],a[href*="#zayavka"],a[href*="#gift"],a[href*="#card"],a[href*="#podarok"],a[href*="#visit"],a[href*="#tb-visit"],a[href*="#story"],a[data-href*="#order"],a[data-href*="#gift"],a[data-href*="#visit"],a[data-href*="#story"],.order,.gift,.visit,.story,.story-1,[data-tb-pop]'
+    );
     for (var i = 0; i < list.length; i++) {
       var a = list[i];
       var href = a.getAttribute('href') || a.getAttribute('data-href') || '';
@@ -237,114 +225,8 @@
       if (!key && a.getAttribute('data-tb-hash')) key = normHash(a.getAttribute('data-tb-hash'));
       if (!key) continue;
       stripAnchor(a, key);
-      if (!a.querySelectorAll) continue;
-      var inner = a.querySelectorAll('a[href], a[data-href]');
-      for (var j = 0; j < inner.length; j++) stripAnchor(inner[j], key);
     }
   }
-
-  function openKey(key) {
-    forceY();
-    window.__tbKeepY = lastY;
-    var api = window[POP[key]];
-    var now = Date.now();
-    if (api && typeof api.open === 'function') {
-      if (lastOpen === key && now - lastOpenAt < 400) return true;
-      lastOpen = key;
-      lastOpenAt = now;
-      pending = '';
-      armScrollLock(2500);
-      forceY();
-      api.open(key);
-      forceY();
-      return true;
-    }
-    pending = key;
-    return false;
-  }
-
-  function intercept(e) {
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    if (e.type !== 'keydown' && e.button && e.button !== 0) return;
-    var key = keyFromNode(e.target);
-    if (!key) return;
-
-    if (!isLocked()) freezeY(true);
-    holdUntil = Date.now() + 2500;
-    armScrollLock(2500);
-
-    if (e.cancelable && e.preventDefault) e.preventDefault();
-    if (e.stopPropagation) e.stopPropagation();
-    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-
-    clearPopHash();
-    forceY();
-    requestAnimationFrame(forceY);
-    setTimeout(forceY, 0);
-
-    if (e.type === 'click' || e.type === 'pointerup' || e.type === 'keyup') openKey(key);
-  }
-
-  (function () {
-    var st = document.createElement('style');
-    st.id = 'tb-pop-noscroll';
-    st.textContent = 'html{scroll-behavior:auto!important}.tb-mount-hide{padding:0!important;margin:0!important;min-height:0!important;height:0!important;overflow:hidden!important;border:0!important;background:none!important}.tb-mount-hide .t-container,.tb-mount-hide .t123,.tb-mount-hide .t123__content,.tb-mount-hide .t-col,.tb-mount-hide .t-width{max-width:none!important;width:100%!important;padding:0!important;margin:0!important;min-height:0!important;height:0!important;overflow:hidden!important}';
-    (document.head || document.documentElement).appendChild(st);
-  })();
-
-  freezeY(true);
-
-  function markUserScroll() { userScroll = Date.now() + 700; }
-  window.addEventListener('wheel', markUserScroll, { passive: true, capture: true });
-  window.addEventListener('touchmove', markUserScroll, { passive: true, capture: true });
-  window.addEventListener('keydown', function (e) {
-    var k = e.key;
-    if (k === 'ArrowDown' || k === 'ArrowUp' || k === 'PageDown' || k === 'PageUp' || k === 'Home' || k === 'End' || k === ' ') markUserScroll();
-  }, true);
-
-  window.addEventListener('scroll', function () {
-    var y = readY();
-    var saved = window.__tbKeepY != null ? window.__tbKeepY : lastY;
-    var guard = isLocked() || Date.now() < jumpUntil || Date.now() < anchorBanUntil;
-    if (guard && Date.now() > userScroll) {
-      if (Math.abs(y - saved) > 1) forceY();
-      return;
-    }
-    freezeY(false);
-  }, { passive: true });
-
-  ['pointerdown', 'mousedown', 'touchstart', 'click', 'pointerup', 'touchend'].forEach(function (ev) {
-    window.addEventListener(ev, intercept, true);
-  });
-  document.addEventListener('keydown', function (e) {
-    if (e.key !== 'Enter' && e.key !== ' ') return;
-    intercept(e);
-  }, true);
-
-  window.addEventListener('hashchange', function () {
-    var key = normHash(location.hash);
-    if (!POP[key]) return;
-    clearPopHash();
-    armScrollLock(2500);
-    forceY();
-    openKey(key);
-  });
-
-  if (POP[normHash(location.hash)]) {
-    var bootKey = normHash(location.hash);
-    freezeY(true);
-    clearPopHash();
-    armScrollLock(2500);
-    setTimeout(function () { openKey(bootKey); }, 0);
-  }
-
-  // После закрытия попапа — вернуть Y (класс lock сняли)
-  var wasLocked = 0;
-  setInterval(function () {
-    var now = isLocked() ? 1 : 0;
-    if (wasLocked && !now) disarmNow();
-    wasLocked = now;
-  }, 100);
 
   function hideMounts() {
     ['tbOrderMount', 'tbGiftMount', 'tbVisitMount', 'tbStoryMount'].forEach(function (id) {
@@ -355,41 +237,12 @@
     });
   }
 
-  function bootScan() {
-    neutralizeLinks(document);
-    hideMounts();
-    if (typeof MutationObserver !== 'undefined') {
-      try {
-        var timer = 0;
-        var mo = new MutationObserver(function (muts) {
-          var added = 0;
-          for (var i = 0; i < muts.length; i++) {
-            if (muts[i].type === 'childList' && muts[i].addedNodes && muts[i].addedNodes.length) { added = 1; break; }
-          }
-          if (!added || timer) return;
-          timer = setTimeout(function () {
-            timer = 0;
-            neutralizeLinks(document);
-            hideMounts();
-          }, 400);
-        });
-        mo.observe(document.documentElement, { childList: true, subtree: true });
-      } catch (e) {}
-    }
-  }
-
-  var FILES = [
-    'order.css', 'order.js',
-    'gift.css', 'gift.js',
-    'visit.css', 'visit.js',
-    'story.css', 'story.js'
-  ];
-  var VER = 'v=27';
-
-  function loadCss(href) {
+  function loadCss(name) {
+    if (cssDone[name]) return;
+    cssDone[name] = 1;
     var l = document.createElement('link');
     l.rel = 'stylesheet';
-    l.href = href;
+    l.href = BASE + name + '?' + VER;
     (document.head || document.documentElement).appendChild(l);
   }
 
@@ -397,7 +250,7 @@
     return new Promise(function (resolve, reject) {
       var s = document.createElement('script');
       s.src = src;
-      s.async = false;
+      s.async = true;
       s.onload = function () { resolve(); };
       s.onerror = function () { reject(new Error('fail ' + src)); };
       (document.head || document.documentElement).appendChild(s);
@@ -414,29 +267,132 @@
     return next();
   }
 
-  var chainStarted = 0;
-  function startFiles() {
-    if (chainStarted) return;
-    chainStarted = 1;
-    FILES.forEach(function (name) {
-      if (/\.css$/i.test(name)) loadCss(BASE + name + '?' + VER);
+  function ensureApi(apiName) {
+    if (window[apiName] && typeof window[apiName].open === 'function') {
+      return Promise.resolve();
+    }
+    if (loading[apiName]) return loading[apiName];
+    var files = BUNDLE[apiName] || [];
+    loading[apiName] = files.reduce(function (chain, name) {
+      if (/\.css$/i.test(name)) {
+        loadCss(name);
+        return chain;
+      }
+      return chain.then(function () { return loadJs(name); });
+    }, Promise.resolve()).catch(function (err) {
+      loading[apiName] = null;
+      throw err;
     });
-    var chain = Promise.resolve();
-    FILES.forEach(function (name) {
-      if (/\.js$/i.test(name)) chain = chain.then(function () { return loadJs(name); });
-    });
-    function flush() { if (pending) openKey(pending); }
-    chain.then(function () {
-      flush();
-      window.__tbPopups.ready = 1;
+    return loading[apiName];
+  }
+
+  function openKey(key) {
+    if (!POP[key]) return false;
+    rememberY();
+    window.__tbKeepY = lastY;
+    var apiName = POP[key];
+    var now = Date.now();
+    if (lastOpen === key && now - lastOpenAt < 400) return true;
+
+    pending = key;
+    ensureApi(apiName).then(function () {
+      if (pending !== key) return;
+      var api = window[apiName];
+      if (!api || typeof api.open !== 'function') return;
+      lastOpen = key;
+      lastOpenAt = Date.now();
+      pending = '';
+      armScrollLock(900);
+      forceY();
+      api.open(key);
+      forceY();
     }, function (err) {
-      flush();
       if (typeof console !== 'undefined' && console.error) console.error('[THE BOYS popups]', err);
     });
+    return true;
   }
-  if (document.readyState === 'complete') startFiles();
-  else window.addEventListener('load', startFiles);
+
+  function intercept(e) {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (e.button && e.button !== 0) return;
+    if (e.target && e.target.closest && e.target.closest('#rec4114939801.menu-open .menu-row')) return;
+
+    var key = keyFromNode(e.target);
+    if (!key) return;
+
+    if (e.cancelable && e.preventDefault) e.preventDefault();
+    if (e.stopPropagation) e.stopPropagation();
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+
+    rememberY();
+    clearPopHash();
+    openKey(key);
+  }
+
+  (function () {
+    var st = document.createElement('style');
+    st.id = 'tb-pop-noscroll';
+    st.textContent =
+      'html{scroll-behavior:auto!important}.tb-mount-hide{padding:0!important;margin:0!important;min-height:0!important;height:0!important;overflow:hidden!important;border:0!important;background:none!important}.tb-mount-hide .t-container,.tb-mount-hide .t123,.tb-mount-hide .t123__content,.tb-mount-hide .t-col,.tb-mount-hide .t-width{max-width:none!important;width:100%!important;padding:0!important;margin:0!important;min-height:0!important;height:0!important;overflow:hidden!important}';
+    (document.head || document.documentElement).appendChild(st);
+  })();
+
+  rememberY();
+
+  /* только click — не 6 событий на каждый тап */
+  window.addEventListener('click', intercept, true);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    intercept(e);
+  }, true);
+
+  window.addEventListener('hashchange', function () {
+    var key = normHash(location.hash);
+    if (!POP[key]) return;
+    clearPopHash();
+    openKey(key);
+  });
+
+  /* следим только за class на <html> — дёшево */
+  var wasLocked = 0;
+  if (typeof MutationObserver !== 'undefined') {
+    try {
+      var classObs = new MutationObserver(function () {
+        var now = isLocked() ? 1 : 0;
+        if (wasLocked && !now) disarmNow();
+        wasLocked = now;
+      });
+      classObs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    } catch (e) {}
+  }
+
+  function bootScan() {
+    neutralizeLinks(document);
+    hideMounts();
+  }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootScan);
   else bootScan();
+  window.addEventListener('load', function () {
+    bootScan();
+    /* прогрев попапов после load — не блокирует первый экран */
+    var warm = function () {
+      if (warmed) return;
+      warmed = 1;
+      Object.keys(BUNDLE).forEach(function (api) {
+        ensureApi(api).catch(function () {});
+      });
+    };
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(warm, { timeout: 5000 });
+    else setTimeout(warm, 2500);
+  });
+
+  if (POP[normHash(location.hash)]) {
+    var bootKey = normHash(location.hash);
+    clearPopHash();
+    setTimeout(function () { openKey(bootKey); }, 0);
+  }
+
+  window.__tbPopups.ready = 1;
 })();
