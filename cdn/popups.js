@@ -1,10 +1,10 @@
-/*! THE BOYS Tilda popups loader v30
+/*! THE BOYS Tilda popups loader v31
  * Lightweight: lazy popup files, no scroll RAF loop, no heavy DOM scans
  * Triggers: #order #gift #visit #story-1
  */
 (function () {
   if (window.__tbPopups) return;
-  window.__tbPopups = { v: 30 };
+  window.__tbPopups = { v: 31 };
 
   var BASES = [
     'https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/',
@@ -42,7 +42,7 @@
     tbStoryPop: ['story.css', 'story.js']
   };
 
-  var VER = 'v=30';
+  var VER = 'v=31';
   var pending = '';
   var lastY = 0;
   var lastOpen = '';
@@ -50,7 +50,7 @@
   var jumpUntil = 0;
   var patched = 0;
   var loading = {};
-  var cssDone = {};
+  var cssReady = {};
 
   var _scrollTo = window.scrollTo.bind(window);
   var _scroll = window.scroll.bind(window);
@@ -237,12 +237,26 @@
   }
 
   function loadCss(name) {
-    if (cssDone[name]) return;
-    cssDone[name] = 1;
-    var l = document.createElement('link');
-    l.rel = 'stylesheet';
-    l.href = BASE + name + '?' + VER;
-    (document.head || document.documentElement).appendChild(l);
+    if (cssReady[name]) return cssReady[name];
+    cssReady[name] = new Promise(function (resolve) {
+      var prev = document.querySelector('link[data-tb-css="' + name + '"]');
+      if (prev) {
+        if (prev.sheet) return resolve();
+        prev.addEventListener('load', function () { resolve(); });
+        prev.addEventListener('error', function () { resolve(); });
+        setTimeout(resolve, 1200);
+        return;
+      }
+      var l = document.createElement('link');
+      l.rel = 'stylesheet';
+      l.href = BASE + name + '?' + VER;
+      l.setAttribute('data-tb-css', name);
+      l.onload = function () { resolve(); };
+      l.onerror = function () { resolve(); };
+      (document.head || document.documentElement).appendChild(l);
+      setTimeout(resolve, 1200);
+    });
+    return cssReady[name];
   }
 
   function loadJsOnce(src) {
@@ -266,6 +280,18 @@
     return next();
   }
 
+  function waitApi(apiName) {
+    return new Promise(function (resolve, reject) {
+      var n = 0;
+      function tick() {
+        if (window[apiName] && typeof window[apiName].open === 'function') return resolve();
+        if (++n > 60) return reject(new Error('API missing ' + apiName));
+        setTimeout(tick, 16);
+      }
+      tick();
+    });
+  }
+
   function ensureApi(apiName) {
     if (window[apiName] && typeof window[apiName].open === 'function') {
       return Promise.resolve();
@@ -273,12 +299,11 @@
     if (loading[apiName]) return loading[apiName];
     var files = BUNDLE[apiName] || [];
     loading[apiName] = files.reduce(function (chain, name) {
-      if (/\.css$/i.test(name)) {
-        loadCss(name);
-        return chain;
-      }
+      if (/\.css$/i.test(name)) return chain.then(function () { return loadCss(name); });
       return chain.then(function () { return loadJs(name); });
-    }, Promise.resolve()).catch(function (err) {
+    }, Promise.resolve()).then(function () {
+      return waitApi(apiName);
+    }).catch(function (err) {
       loading[apiName] = null;
       throw err;
     });
@@ -295,20 +320,26 @@
 
     pending = key;
     ensureApi(apiName).then(function () {
-      if (pending !== key) return;
+      if (pending !== key && pending !== '') return;
       var api = window[apiName];
       if (!api || typeof api.open !== 'function') return;
       lastOpen = key;
       lastOpenAt = Date.now();
-      pending = '';
+      if (pending === key) pending = '';
       armScrollLock(900);
       forceY();
       api.open(key);
       forceY();
     }, function (err) {
+      if (pending === key) pending = '';
       if (typeof console !== 'undefined' && console.error) console.error('[THE BOYS popups]', err);
     });
     return true;
+  }
+
+  function warmFromEvent(e) {
+    var key = keyFromNode(e.target);
+    if (key) ensureApi(POP[key]);
   }
 
   function intercept(e) {
@@ -340,6 +371,9 @@
 
   /* только click — не 6 событий на каждый тап */
   window.addEventListener('click', intercept, true);
+  /* прогрев бандла по hover — чтобы первый клик не ждал сеть */
+  window.addEventListener('pointerover', warmFromEvent, true);
+  window.addEventListener('focusin', warmFromEvent, true);
 
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Enter' && e.key !== ' ') return;

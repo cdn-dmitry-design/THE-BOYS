@@ -87,7 +87,7 @@ function scale(){
   if(!stage)return;
   var w=document.documentElement.clientWidth||innerWidth||320;if(w<320)w=320;
   var h=innerHeight||document.documentElement.clientHeight||700;
-  var a=ab(w),sc=w/a,bottom=a===390?62:0;
+  var a=ab(w),sc=w/a,pad=20,bottom=a===390?62:0;
   stage.setAttribute('data-ab',String(a));
   stage.style.width=a+'px';
   stage.style.height=(h/sc)+'px';
@@ -98,8 +98,12 @@ function scale(){
   stage.style.justifyContent='center';
   var card=stage.querySelector('.tb-story__card');
   if(card){
-    card.style.height='auto';
-    card.style.maxHeight=Math.max(0,(h/sc)*0.88-bottom)+'px';
+    var avail=Math.max(0,(h/sc)-pad*2-bottom);
+    /* На высоких мониторах не тянем на весь экран — компактный потолок */
+    var cap=a>=1200?Math.min(avail,760):a>=960?Math.min(avail,720):avail;
+    card.style.height=Math.max(0,cap)+'px';
+    card.style.maxHeight='';
+    card.style.margin=pad+'px auto';
   }
 }
 function render(){
