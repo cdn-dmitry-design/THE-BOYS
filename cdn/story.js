@@ -93,8 +93,14 @@ function scale(){
   stage.style.height=(h/sc)+'px';
   stage.style.transformOrigin='top left';
   stage.style.zoom=sc;
+  stage.style.display='flex';
+  stage.style.alignItems='center';
+  stage.style.justifyContent='center';
   var card=stage.querySelector('.tb-story__card');
-  if(card)card.style.height=Math.max(0,(h/sc)-46-bottom)+'px';
+  if(card){
+    card.style.height='auto';
+    card.style.maxHeight=Math.max(0,(h/sc)*0.88-bottom)+'px';
+  }
 }
 function render(){
   var s=STORIES[iCur]||STORIES[0];

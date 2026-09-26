@@ -14,8 +14,11 @@ function ab(w){return w>=1200?1200:w>=960?960:w>=640?640:390;}
 function scale(){
   if(!stage)return;
   var w=document.documentElement.clientWidth||innerWidth||320;if(w<320)w=320;
-  var h=innerHeight||document.documentElement.clientHeight||700,a=ab(w),sc=w/a;
+  var h=innerHeight||document.documentElement.clientHeight||700,a=ab(w),sc=w/a,bottom=a===390?62:0;
   stage.setAttribute('data-ab',a);stage.style.width=a+'px';stage.style.height=(h/sc)+'px';stage.style.transformOrigin='top left';stage.style.zoom=sc;
+  stage.style.display='flex';stage.style.alignItems='center';stage.style.justifyContent='center';
+  var card=stage.querySelector('.tb-pop__card');
+  if(card){card.style.height='auto';card.style.maxHeight=Math.max(0,(h/sc)*0.88-bottom)+'px';}
 }
 function setOpen(i){
   openI=i;var items=stage.querySelectorAll('.tb-pop__item');
