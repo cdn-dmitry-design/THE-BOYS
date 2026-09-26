@@ -37,5 +37,5 @@ html.tb-story-lock body{position:fixed!important;left:0!important;right:0!import
 .tb-story__stage[data-ab="960"] .tb-story__title,.tb-story__stage[data-ab="640"] .tb-story__title,.tb-story__stage[data-ab="390"] .tb-story__title{font-size:32px;letter-spacing:-.64px}
 .tb-story__stage[data-ab="390"] .tb-story__card{width:358px;max-width:calc(100% - 40px)}
 .tb-story__stage[data-ab="390"] .tb-story__cols{flex-direction:column;gap:20px}
-.tb-story__stage[data-ab="390"] .tb-story__col{width:100%;flex:1 1 auto;text-indent:0}
+.tb-story__stage[data-ab="390"] .tb-story__col{width:100%;flex:1 1 auto;text-indent:58px}
 @media (prefers-reduced-motion:reduce){.tb-story,.tb-story::before,.tb-story::after,.tb-story__stage,.tb-story__card{transition:none}}
