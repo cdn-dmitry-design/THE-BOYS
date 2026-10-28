@@ -1,10 +1,10 @@
-/*! THE BOYS Tilda popups loader v34
+/*! THE BOYS Tilda popups loader v35
  * Lightweight: lazy popup files, no scroll RAF loop, no heavy DOM scans
- * Triggers: #order #gift #visit #story-1
+ * Triggers: #order #order-full #gift #visit #story-1
  */
 (function () {
   if (window.__tbPopups) return;
-  window.__tbPopups = { v: 34 };
+  window.__tbPopups = { v: 35 };
 
   var BASES = [
     'https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/',
@@ -24,6 +24,8 @@
   var POP = {
     order: 'tbOrderPop',
     zayavka: 'tbOrderPop',
+    'order-full': 'tbOrderPop',
+    'zayavka-full': 'tbOrderPop',
     gift: 'tbGiftPop',
     card: 'tbGiftPop',
     podarok: 'tbGiftPop',
@@ -42,7 +44,7 @@
     tbStoryPop: ['story.css', 'story.js']
   };
 
-  var VER = 'v=34';
+  var VER = 'v=35';
   var pending = '';
   var lastY = 0;
   var lastOpen = '';
@@ -167,7 +169,7 @@
 
     /* быстрый путь через closest вместо ручного обхода */
     var hit = node.closest(
-      '[data-tb-hash],[data-tb-pop],a[href],a[data-href],area[href],.order,.gift,.visit,.story,.story-1'
+      '[data-tb-hash],[data-tb-pop],a[href],a[data-href],area[href],.order-full,.order,.gift,.visit,.story,.story-1'
     );
     if (!hit) return '';
 
@@ -183,6 +185,7 @@
     if (POP[kind]) return kind;
 
     if (hit.classList) {
+      if (hit.classList.contains('order-full')) return 'order-full';
       if (hit.classList.contains('order')) return 'order';
       if (hit.classList.contains('gift')) return 'gift';
       if (hit.classList.contains('visit')) return 'visit';
@@ -194,6 +197,7 @@
 
   function classKey(el) {
     if (!el || !el.classList) return '';
+    if (el.classList.contains('order-full')) return 'order-full';
     if (el.classList.contains('order')) return 'order';
     if (el.classList.contains('gift')) return 'gift';
     if (el.classList.contains('visit')) return 'visit';
@@ -215,7 +219,7 @@
   function neutralizeLinks(root) {
     var scope = root && root.querySelectorAll ? root : document;
     var list = scope.querySelectorAll(
-      'a[href*="#order"],a[href*="#zayavka"],a[href*="#gift"],a[href*="#card"],a[href*="#podarok"],a[href*="#visit"],a[href*="#tb-visit"],a[href*="#story"],a[data-href*="#order"],a[data-href*="#gift"],a[data-href*="#visit"],a[data-href*="#story"],.order,.gift,.visit,.story,.story-1,[data-tb-pop]'
+      'a[href*="#order"],a[href*="#zayavka"],a[href*="#gift"],a[href*="#card"],a[href*="#podarok"],a[href*="#visit"],a[href*="#tb-visit"],a[href*="#story"],a[data-href*="#order"],a[data-href*="#gift"],a[data-href*="#visit"],a[data-href*="#story"],.order-full,.order,.gift,.visit,.story,.story-1,[data-tb-pop]'
     );
     for (var i = 0; i < list.length; i++) {
       var a = list[i];
