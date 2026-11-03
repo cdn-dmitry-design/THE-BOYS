@@ -1,10 +1,10 @@
-/*! THE BOYS Tilda popups loader v39
+/*! THE BOYS Tilda popups loader v40
  * Lightweight: lazy popup files, no scroll RAF loop, no heavy DOM scans
  * Triggers: #order #order-full #order-stylist #gift #visit #story-1
  */
 (function () {
   if (window.__tbPopups) return;
-  window.__tbPopups = { v: 39 };
+  window.__tbPopups = { v: 40 };
 
   var BASES = [
     'https://cdn.jsdelivr.net/gh/cdn-dmitry-design/THE-BOYS@main/cdn/',
@@ -47,7 +47,7 @@
     tbStoryPop: ['story.css', 'story.js']
   };
 
-  var VER = 'v=39';
+  var VER = 'v=40';
   var pending = '';
   var lastY = 0;
   var lastOpen = '';
