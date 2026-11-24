@@ -2,7 +2,7 @@
   var title='Запись на примерку';
   var lead='<p class="tb-order__lead">В The Boys мы уже 10 лет работаем по записи, чтобы уделить вам персональное внимание и сохранить камерную атмосферу</p>';
   var foot='<p class="tb-order__foot">Мы свяжемся с вами, чтобы согласовать<br>удобное время визита.</p>';
-  var sendLabel='Записаться на примерку';
+  var sendLabel='Записаться <br>на примерку';
   var fields=
     '<label class="tb-order__field"><input type="text" name="'+V.name+'" autocomplete="name" aria-label="Имя" placeholder="Имя" required>'+STAR+'</label>'+
     '<label class="tb-order__field"><input type="email" name="'+V.email+'" autocomplete="email" aria-label="Почта" placeholder="Почта"></label>'+
